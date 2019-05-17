@@ -10,7 +10,7 @@ pub enum LineStyle {
     Code,
 }
 
-/// a parsed line:
+/// a parsed line
 /// - the global style of the line, if any
 /// - a vector of styled parts
 #[derive(Debug, PartialEq, Eq)]

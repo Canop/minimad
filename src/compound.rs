@@ -14,6 +14,7 @@ pub struct Compound<'s> {
 impl<'s> Compound<'s> {
     // make a raw unstyled compound
     // Involves no parsing
+    #[inline(always)]
     pub fn raw_str(src: &'s str) -> Compound<'s> {
         Compound {
             src,
@@ -26,6 +27,7 @@ impl<'s> Compound<'s> {
     }
     // make a raw unstyled compound from part of a string
     // Involves no parsing
+    #[inline(always)]
     pub fn raw_part(src: &'s str, start: usize, end: usize) -> Compound<'s> {
         Compound {
             src,
@@ -36,6 +38,7 @@ impl<'s> Compound<'s> {
             code: false,
         }
     }
+    #[inline(always)]
     pub fn new(
         src: &'s str, // the source string from which the compound is a part
         start: usize, // start index in bytes
@@ -53,27 +56,34 @@ impl<'s> Compound<'s> {
             code,
         }
     }
+    #[inline(always)]
     pub fn bold(mut self) -> Compound<'s> {
         self.bold = true;
         self
     }
+    #[inline(always)]
     pub fn italic(mut self) -> Compound<'s> {
         self.italic = true;
         self
     }
+    #[inline(always)]
     pub fn code(mut self) -> Compound<'s> {
         self.code = true;
         self
     }
+    #[inline(always)]
     pub fn set_bold(&mut self, bold: bool) {
         self.bold = bold;
     }
+    #[inline(always)]
     pub fn set_italic(&mut self, italic: bool) {
         self.italic = italic;
     }
+    #[inline(always)]
     pub fn set_code(&mut self, code: bool) {
         self.code = code;
     }
+    #[inline(always)]
     pub fn as_str(&self) -> &'s str {
         &self.src[self.start..self.end]
     }
