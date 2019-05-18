@@ -1,6 +1,6 @@
-use std::cmp;
 use crate::compound::Compound;
 use crate::line::*;
+use std::cmp;
 
 /// The structure parsing a line.
 /// Normally not used directly but though `line::from(str)`
@@ -18,12 +18,16 @@ fn header_level(src: &str) -> usize {
     let src = src.as_bytes();
     let mut l: usize = src.len();
     if l > 2 {
-        l = cmp::min(src.len()-1, 9);
+        l = cmp::min(src.len() - 1, MAX_HEADER_DEPTH + 1);
         for i in 0..l {
             match src[i] {
                 b'#' => {}
-                b' ' => { return i; }
-                _ => { return 0; }
+                b' ' => {
+                    return i;
+                }
+                _ => {
+                    return 0;
+                }
             }
         }
     }
@@ -72,7 +76,7 @@ impl<'s> LineParser<'s> {
         self.idx = end + tag_length;
     }
     fn code_compound_from_idx(&self, idx: usize) -> Vec<Compound<'s>> {
-        vec![ Compound::new(
+        vec![Compound::new(
             &self.src,
             idx,
             self.src.len(),
@@ -132,21 +136,21 @@ impl<'s> LineParser<'s> {
         if self.src.starts_with("    ") {
             return Line {
                 style: LineStyle::Code,
-                compounds: self.code_compound_from_idx(4)
-            }
+                compounds: self.code_compound_from_idx(4),
+            };
         }
         if self.src.starts_with("\t") {
             return Line {
                 style: LineStyle::Code,
-                compounds: self.code_compound_from_idx(1)
-            }
+                compounds: self.code_compound_from_idx(1),
+            };
         }
         if self.src.starts_with("* ") {
             self.idx = 2;
             return Line {
                 style: LineStyle::ListItem,
                 compounds: self.parse_compounds(),
-            }
+            };
         }
         let header_level = header_level(self.src);
         if header_level > 0 {
@@ -154,7 +158,7 @@ impl<'s> LineParser<'s> {
             return Line {
                 style: LineStyle::Header(header_level as u8),
                 compounds: self.parse_compounds(),
-            }
+            };
         }
         Line {
             style: LineStyle::Normal,
@@ -209,9 +213,7 @@ mod tests {
             Line::from("    let r = Math.sin(π/2) * 7"),
             Line {
                 style: LineStyle::Code,
-                compounds: vec![
-                    Compound::raw_str("let r = Math.sin(π/2) * 7").code(),
-                ]
+                compounds: vec![Compound::raw_str("let r = Math.sin(π/2) * 7").code(),]
             }
         );
     }
@@ -222,9 +224,7 @@ mod tests {
             Line::from("### just a title"),
             Line {
                 style: LineStyle::Header(3),
-                compounds: vec![
-                    Compound::raw_str("just a title"),
-                ]
+                compounds: vec![Compound::raw_str("just a title"),]
             }
         );
     }

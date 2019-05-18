@@ -6,6 +6,9 @@ Its main motivation was to be the basis of the [termimad](https://github.com/Can
 It can be used on its own:
 
 ```rust
+use minimad::Compound;
+use minimad::{Line, LineStyle};
+
 assert_eq!(
     Line::from("## a header with some **bold**!"),
     Line {
@@ -23,6 +26,9 @@ assert_eq!(
 mod compound;
 mod line;
 mod line_parser;
+mod text;
 
 pub use compound::Compound;
-pub use line::Line;
+pub use line::MAX_HEADER_DEPTH;
+pub use line::{Line, LineStyle};
+pub use text::Text;
