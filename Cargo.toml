@@ -1,6 +1,6 @@
 [package]
 name = "minimad"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["dystroy <denys.seguret@gmail.com>"]
 repository = "https://github.com/Canop/minimad"
 description = "light Markdown parser"

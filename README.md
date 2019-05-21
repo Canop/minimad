@@ -16,6 +16,8 @@
 
 A *very* simple, non universal purpose, markdown parser.
 
+If you're looking for a Markdown parser, this one is probably *not* the one you want.
+
 Minimad can be used on its own but is first designed for the [termimad](https://github.com/Canop/termimad) lib, which displays static and dynamic markdown snippets on a terminal without mixing the skin with the code.
 
 ### Usage

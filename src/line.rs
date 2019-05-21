@@ -4,7 +4,7 @@ use crate::line_parser::LineParser;
 pub const MAX_HEADER_DEPTH: usize = 8;
 
 /// The global style of a line
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum LineStyle {
     Normal,
     Header(u8), // never 0, and <= MAX_HEADER_DEPTH
@@ -53,4 +53,5 @@ impl Line<'_> {
 pub fn count_chars() {
     assert_eq!(Line::from("τ").char_length(), 1);
     assert_eq!(Line::from("τ:`2π`").char_length(), 4);
+    assert_eq!(Line::from("* item").char_length(), 4);
 }

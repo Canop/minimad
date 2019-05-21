@@ -2,6 +2,7 @@ use std::fmt::{self, Write};
 
 /// a Compound is a part of a line with a consistent styling.
 /// It can be part of word, several words, some inline code, or even the whole line.
+#[derive(Clone)]
 pub struct Compound<'s> {
     src: &'s str, // the source string from which the compound is a part
     start: usize, // start index in bytes
@@ -23,6 +24,34 @@ impl<'s> Compound<'s> {
             bold: false,
             italic: false,
             code: false,
+        }
+    }
+    /// return a sub part of the compound, with the same syling
+    /// r_start is relative, that is 0 is the index of the first
+    /// char of this compound.
+    #[inline(always)]
+    pub fn sub(&self, r_start: usize, r_end: usize) -> Compound<'s> {
+        Compound {
+            src: self.src,
+            start: self.start + r_start,
+            end: self.start + r_end,
+            bold: self.bold,
+            italic: self.italic,
+            code: self.code,
+        }
+    }
+    /// return a sub part at end of the compound, with the same syling
+    /// r_start is relative, that is if you give 0 you get a clone of
+    /// this compound
+    #[inline(always)]
+    pub fn tail(&self, r_start: usize) -> Compound<'s> {
+        Compound {
+            src: self.src,
+            start: self.start + r_start,
+            end: self.end,
+            bold: self.bold,
+            italic: self.italic,
+            code: self.code,
         }
     }
     // make a raw unstyled compound from part of a string
