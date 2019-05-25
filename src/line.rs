@@ -1,51 +1,80 @@
+use crate::composite::{Composite, CompositeStyle};
 use crate::compound::Compound;
 use crate::line_parser::LineParser;
+use crate::tbl::TableRow;
 
 pub const MAX_HEADER_DEPTH: usize = 8;
 
-/// The global style of a line
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum LineStyle {
-    Normal,
-    Header(u8), // never 0, and <= MAX_HEADER_DEPTH
-    ListItem,
-    Code,
+pub enum Alignment {
+    Left,
+    Center,
+    Right,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct CellFormat {
+    alignment: Alignment,
 }
 
 /// a parsed line
-/// - the global style of the line, if any
-/// - a vector of styled parts
-#[derive(Debug, PartialEq, Eq)]
-pub struct Line<'a> {
-    pub style: LineStyle,
-    pub compounds: Vec<Compound<'a>>,
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum Line<'a> {
+    Normal(Composite<'a>),
+    TableRow(TableRow<'a>),
 }
 
 impl Line<'_> {
     pub fn from(md: &str) -> Line {
         LineParser::from(md).line()
     }
-    pub fn is_code(&self) -> bool {
-        match self.style {
-            LineStyle::Code => true,
-            _ => false,
-        }
-    }
-    pub fn is_list_item(&self) -> bool {
-        match self.style {
-            LineStyle::ListItem => true,
-            _ => false,
-        }
-    }
-    // return the total number of characters in the parsed line
-    // Example
-    // ```rust
-    // assert_eq!(Line::from("τ:`2π`").char_length(), 4);
-    // ```
+    #[inline(always)]
     pub fn char_length(&self) -> usize {
-        self.compounds
-            .iter()
-            .fold(0, |sum, compound| sum + compound.as_str().chars().count())
+        match self {
+            Line::Normal(composite) => composite.char_length(),
+            Line::TableRow(row) => row.cells.iter().fold(0, |s, c| s + c.char_length()),
+        }
+    }
+    pub fn new_paragraph(compounds: Vec<Compound>) -> Line {
+        Line::Normal(Composite {
+            style: CompositeStyle::Paragraph,
+            compounds,
+        })
+    }
+    pub fn new_code(compound: Compound) -> Line {
+        Line::Normal(Composite {
+            style: CompositeStyle::Code,
+            compounds: vec![compound],
+        })
+    }
+    pub fn new_list_item(compounds: Vec<Compound>) -> Line {
+        Line::Normal(Composite {
+            style: CompositeStyle::ListItem,
+            compounds,
+        })
+    }
+    pub fn new_header(level: u8, compounds: Vec<Compound>) -> Line {
+        Line::Normal(Composite {
+            style: CompositeStyle::Header(level),
+            compounds,
+        })
+    }
+    pub fn new_table_row(composites: Vec<Composite>) -> Line {
+        Line::TableRow(TableRow { cells: composites })
+    }
+    #[inline(always)]
+    pub fn is_table_row(&self) -> bool {
+        match self {
+            Line::TableRow(_) => true,
+            _ => false,
+        }
+    }
+    #[inline(always)]
+    pub fn is_code(&self) -> bool {
+        match self {
+            Line::Normal(composite) => composite.is_code(),
+            _ => false,
+        }
     }
 }
 

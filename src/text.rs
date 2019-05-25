@@ -8,7 +8,7 @@ pub struct Text<'a> {
 }
 
 impl Text<'_> {
-    /// build a parsed text from a raw one
+    /// build a parsed text from a Markdown string
     pub fn from(md: &str) -> Text {
         let lines = md.lines().map(|md| LineParser::from(md).line()).collect();
         Text { lines }

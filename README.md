@@ -25,33 +25,30 @@ Minimad can be used on its own but is first designed for the [termimad](https://
 
 ```toml
 [dependencies]
-minimad = "0.2"
+minimad = "0.3"
 ```
 
 ```rust
 assert_eq!(
     Line::from("## a header with some **bold**!"),
-    Line {
-	style: LineStyle::Header(2),
-	compounds: vec![
-	    Compound::raw_str("a header with some "),
-	    Compound::raw_str("bold").bold(),
-	    Compound::raw_str("!"),
-	]
-    }
+    Line::new_header(
+        2,
+        vec![
+            Compound::raw_str("a header with some "),
+            Compound::raw_str("bold").bold(),
+            Compound::raw_str("!"),
+        ]
+    )
 );
 
 assert_eq!(
-    Line::from("*Italic then **bold and italic `and some *code*`** and italic*"),
-    Line {
-	style: LineStyle::Normal,
-	compounds: vec![
-	    Compound::raw_str("Italic then ").italic(),
-	    Compound::raw_str("bold and italic ").bold().italic(),
-	    Compound::raw_str("and some *code*").bold().italic().code(),
-	    Compound::raw_str(" and italic").italic(),
-	]
-    }
+    parse_inline("*Italic then **bold and italic `and some *code*`** and italic*"),
+    Composite::from(vec![
+        Compound::raw_str("Italic then ").italic(),
+        Compound::raw_str("bold and italic ").bold().italic(),
+        Compound::raw_str("and some *code*").bold().italic().code(),
+        Compound::raw_str(" and italic").italic(),
+    ])
 );
 ```
 

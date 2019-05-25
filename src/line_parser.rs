@@ -1,16 +1,8 @@
+use crate::composite::{Composite, CompositeStyle};
 use crate::compound::Compound;
 use crate::line::*;
+use crate::tbl::TableRow;
 use std::cmp;
-
-/// The structure parsing a line.
-/// Normally not used directly but though `line::from(str)`
-pub struct LineParser<'s> {
-    src: &'s str,
-    idx: usize,
-    bold: bool,
-    italic: bool,
-    code: bool,
-}
 
 /// count the number of '#' at start. Return 0 if they're
 /// not followed by a ' ' or if they're too many
@@ -52,6 +44,24 @@ fn header_level_count() {
     assert_eq!(header_level("######### a b"), 0); // too deep
 }
 
+/// The structure parsing a line or part of a line.
+/// A LineParser initialized from a markdown string exposes 2 main methods:
+/// * `line` parses a line which is supposed to be part of a markdown text. This
+///       method shouln't really be used externally: a text can be parsed in a whole
+///       using `Text::from`
+/// * `inline` parses a snippet which isn't supposed to be part of a markdown text.
+///       Some types of lines aren't produced this ways as they don't make sense out of
+///       a text: ListItem, TableRow, Code.
+///
+/// Normally not used directly but though `line::from(str)`
+pub struct LineParser<'s> {
+    src: &'s str,
+    idx: usize, // current index in string, in bytes
+    bold: bool,
+    italic: bool,
+    code: bool,
+}
+
 impl<'s> LineParser<'s> {
     pub fn from(src: &'s str) -> LineParser {
         LineParser {
@@ -75,17 +85,10 @@ impl<'s> LineParser<'s> {
         }
         self.idx = end + tag_length;
     }
-    fn code_compound_from_idx(&self, idx: usize) -> Vec<Compound<'s>> {
-        vec![Compound::new(
-            &self.src,
-            idx,
-            self.src.len(),
-            false,
-            false,
-            true,
-        )]
+    fn code_compound_from_idx(&self, idx: usize) -> Compound<'s> {
+        Compound::new(&self.src, idx, self.src.len(), false, false, true)
     }
-    fn parse_compounds(&mut self) -> Vec<Compound<'s>> {
+    fn parse_compounds(&mut self, stop_on_pipe: bool) -> Vec<Compound<'s>> {
         let mut compounds = Vec::new();
         let mut after_first_star = false;
         for (idx, char) in self.src.char_indices().skip(self.idx) {
@@ -102,6 +105,10 @@ impl<'s> LineParser<'s> {
                         self.close_compound(idx - 1, 2, &mut compounds);
                         self.bold ^= true;
                     }
+                    '|' if stop_on_pipe => {
+                        self.close_compound(idx - 1, 1, &mut compounds);
+                        return compounds;
+                    }
                     _ => {
                         // there was only one star
                         // Note that we don't handle a tag just after a star (execpt in code)
@@ -115,6 +122,10 @@ impl<'s> LineParser<'s> {
                     '*' => {
                         after_first_star = true;
                         // we don't know yet if it's one or two stars
+                    }
+                    '|' if stop_on_pipe => {
+                        self.close_compound(idx, 0, &mut compounds);
+                        return compounds;
                     }
                     '`' => {
                         self.close_compound(idx, 1, &mut compounds);
@@ -131,45 +142,65 @@ impl<'s> LineParser<'s> {
         self.close_compound(idx, 0, &mut compounds);
         compounds
     }
-    pub fn line(&mut self) -> Line<'s> {
-        assert_eq!(self.idx, 0, "LineParser.line() called more than once");
-        if self.src.starts_with("    ") {
-            return Line {
-                style: LineStyle::Code,
-                compounds: self.code_compound_from_idx(4),
+    fn parse_cells(&mut self) -> Vec<Composite<'s>> {
+        let mut cells = Vec::new();
+        while self.idx < self.src.len() {
+            self.idx += 1;
+            let style = if self.src[self.idx..].starts_with("* ") {
+                CompositeStyle::ListItem
+            } else {
+                CompositeStyle::Paragraph
             };
+            self.code = false;
+            self.bold = false;
+            self.italic = false;
+            let compounds = self.parse_compounds(true);
+            let mut composite = Composite { style, compounds };
+            composite.trim_spaces();
+            cells.push(composite);
+        }
+        if cells.len() > 0 && cells[cells.len()-1].compounds.len()==0 {
+            cells.pop();
+        }
+        cells
+    }
+    pub fn inline(&mut self) -> Composite<'s> {
+        assert_eq!(self.idx, 0, "A LineParser can only be consumed once");
+        Composite {
+            style: CompositeStyle::Paragraph,
+            compounds: self.parse_compounds(false)
+        }
+    }
+    pub fn line(&mut self) -> Line<'s> {
+        assert_eq!(self.idx, 0, "A LineParser can only be consumed once");
+        if self.src.starts_with("|") {
+            return Line::TableRow(TableRow {
+                cells: self.parse_cells(),
+            });
+        }
+        if self.src.starts_with("    ") {
+            return Line::new_code(self.code_compound_from_idx(4));
         }
         if self.src.starts_with("\t") {
-            return Line {
-                style: LineStyle::Code,
-                compounds: self.code_compound_from_idx(1),
-            };
+            return Line::new_code(self.code_compound_from_idx(1));
         }
         if self.src.starts_with("* ") {
             self.idx = 2;
-            return Line {
-                style: LineStyle::ListItem,
-                compounds: self.parse_compounds(),
-            };
+            return Line::new_list_item(self.parse_compounds(false));
         }
         let header_level = header_level(self.src);
         if header_level > 0 {
             self.idx = header_level + 1;
-            return Line {
-                style: LineStyle::Header(header_level as u8),
-                compounds: self.parse_compounds(),
-            };
+            return Line::new_header(header_level as u8, self.parse_compounds(false));
         }
-        Line {
-            style: LineStyle::Normal,
-            compounds: self.parse_compounds(),
-        }
+        Line::new_paragraph(self.parse_compounds(false))
     }
 }
 
 /// Tests of line parsing
 #[cfg(test)]
 mod tests {
+    use crate::composite::*;
     use crate::compound::*;
     use crate::line::*;
 
@@ -177,17 +208,14 @@ mod tests {
     fn simple_line_parsing() {
         assert_eq!(
             Line::from("Hello **World**. *Code*: `sqrt(π/2)`"),
-            Line {
-                style: LineStyle::Normal,
-                compounds: vec![
-                    Compound::raw_str("Hello "),
-                    Compound::raw_str("World").bold(),
-                    Compound::raw_str(". "),
-                    Compound::raw_str("Code").italic(),
-                    Compound::raw_str(": "),
-                    Compound::raw_str("sqrt(π/2)").code(),
-                ]
-            }
+            Line::new_paragraph(vec![
+                Compound::raw_str("Hello "),
+                Compound::raw_str("World").bold(),
+                Compound::raw_str(". "),
+                Compound::raw_str("Code").italic(),
+                Compound::raw_str(": "),
+                Compound::raw_str("sqrt(π/2)").code(),
+            ])
         );
     }
 
@@ -195,15 +223,12 @@ mod tests {
     fn nested_styles_parsing() {
         assert_eq!(
             Line::from("*Italic then **bold and italic `and some *code*`** and italic*"),
-            Line {
-                style: LineStyle::Normal,
-                compounds: vec![
-                    Compound::raw_str("Italic then ").italic(),
-                    Compound::raw_str("bold and italic ").bold().italic(),
-                    Compound::raw_str("and some *code*").bold().italic().code(),
-                    Compound::raw_str(" and italic").italic(),
-                ]
-            }
+            Line::new_paragraph(vec![
+                Compound::raw_str("Italic then ").italic(),
+                Compound::raw_str("bold and italic ").bold().italic(),
+                Compound::raw_str("and some *code*").bold().italic().code(),
+                Compound::raw_str(" and italic").italic(),
+            ])
         );
     }
 
@@ -211,10 +236,7 @@ mod tests {
     fn line_of_code() {
         assert_eq!(
             Line::from("    let r = Math.sin(π/2) * 7"),
-            Line {
-                style: LineStyle::Code,
-                compounds: vec![Compound::raw_str("let r = Math.sin(π/2) * 7").code(),]
-            }
+            Line::new_code(Compound::raw_str("let r = Math.sin(π/2) * 7").code(),)
         );
     }
 
@@ -222,10 +244,7 @@ mod tests {
     fn standard_header() {
         assert_eq!(
             Line::from("### just a title"),
-            Line {
-                style: LineStyle::Header(3),
-                compounds: vec![Compound::raw_str("just a title"),]
-            }
+            Line::new_header(3, vec![Compound::raw_str("just a title"),])
         );
     }
 
@@ -233,13 +252,10 @@ mod tests {
     fn list_item() {
         assert_eq!(
             Line::from("* *list* item"),
-            Line {
-                style: LineStyle::ListItem,
-                compounds: vec![
-                    Compound::raw_str("list").italic(),
-                    Compound::raw_str(" item"),
-                ]
-            }
+            Line::new_list_item(vec![
+                Compound::raw_str("list").italic(),
+                Compound::raw_str(" item"),
+            ])
         );
     }
 
@@ -247,14 +263,35 @@ mod tests {
     fn styled_header() {
         assert_eq!(
             Line::from("## a header with some **bold**!"),
-            Line {
-                style: LineStyle::Header(2),
-                compounds: vec![
+            Line::new_header(
+                2,
+                vec![
                     Compound::raw_str("a header with some "),
                     Compound::raw_str("bold").bold(),
                     Compound::raw_str("!"),
                 ]
-            }
+            )
+        );
+    }
+
+    #[test]
+    fn table_row() {
+        assert_eq!(
+            Line::from("| bla |*italic*|hi!|"),
+            Line::new_table_row(vec![
+                Composite {
+                    style: CompositeStyle::Paragraph,
+                    compounds: vec![Compound::raw_str("bla"),],
+                },
+                Composite {
+                    style: CompositeStyle::Paragraph,
+                    compounds: vec![Compound::raw_str("italic").italic(),],
+                },
+                Composite {
+                    style: CompositeStyle::Paragraph,
+                    compounds: vec![Compound::raw_str("hi!"),],
+                }
+            ])
         );
     }
 }

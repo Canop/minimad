@@ -116,6 +116,54 @@ impl<'s> Compound<'s> {
     pub fn as_str(&self) -> &'s str {
         &self.src[self.start..self.end]
     }
+    #[inline(always)]
+    pub fn char_length(&self) -> usize {
+        self.as_str().chars().count()
+    }
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.start >= self.end
+    }
+    pub fn trim_left_spaces(&mut self) {
+        let mut chars = self.as_str().char_indices();
+        let mut didx: usize;
+        loop {
+            if let Some((idx, char)) = chars.next() {
+                didx = idx;
+                if !char.is_whitespace() {
+                    break;
+                }
+            } else {
+                // the whole compound is made of white spaces
+                self.start = self.end;
+                return;
+            }
+        }
+        self.start += didx;
+    }
+    pub fn trim_right_spaces(&mut self) {
+        let mut chars = self.as_str().char_indices().rev();
+        let mut didx = 0;
+        loop {
+            if let Some((idx, char)) = chars.next() {
+                if !char.is_whitespace() {
+                    break;
+                }
+                didx = idx;
+            } else {
+                // the whole compound is made of white spaces
+                self.start = self.end;
+                return;
+            }
+        }
+        if didx > 0 {
+            self.end = self.start + didx;
+        }
+    }
+    pub fn trim_spaces(&mut self) {
+        self.trim_left_spaces();
+        self.trim_right_spaces();
+    }
 }
 
 impl fmt::Display for Compound<'_> {
@@ -152,3 +200,33 @@ impl PartialEq for Compound<'_> {
     }
 }
 impl Eq for Compound<'_> {}
+
+#[test]
+fn test_trim_left() {
+    let mut left = Compound::raw_str(" ");
+    left.trim_left_spaces();
+    assert!(left.is_empty());
+
+    let mut left = Compound::raw_str("  text");
+    left.trim_left_spaces();
+    assert_eq!(left, Compound::raw_str("text"), "trim 2 spaces");
+
+    let mut left = Compound::raw_str("text");
+    left.trim_left_spaces();
+    assert_eq!(left, Compound::raw_str("text"), "not trimming when no space");
+}
+
+#[test]
+fn test_trim_right() {
+    let mut left = Compound::raw_str(" ");
+    left.trim_right_spaces();
+    assert!(left.is_empty());
+
+    let mut left = Compound::raw_str("  text   ");
+    left.trim_right_spaces();
+    assert_eq!(left, Compound::raw_str("  text"));
+
+    let mut left = Compound::raw_str("text");
+    left.trim_right_spaces();
+    assert_eq!(left, Compound::raw_str("text"), "not trimming when no space");
+}
