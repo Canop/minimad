@@ -13,9 +13,6 @@ pub enum CompositeStyle {
     Code,
 }
 
-// hem. PR welcome
-static SPACES: &'static str = "                                                                ";
-
 /// a composite is a monoline sequence of compounds.
 /// - the global style of the composite, if any
 /// - a vector of styled parts
@@ -118,18 +115,6 @@ impl<'a> Composite<'a> {
     }
     pub fn is_empty(&self) -> bool {
         self.compounds.len() == 0
-    }
-    pub fn pad_left(&mut self, nb_added_spaces: usize) {
-        if nb_added_spaces > 0 {
-            let nb_added_spaces = nb_added_spaces.min(SPACES.len());
-            self.compounds.insert(0, Compound::raw_part(&SPACES, 0, nb_added_spaces));
-        }
-    }
-    pub fn pad_right(&mut self, nb_added_spaces: usize) {
-        if nb_added_spaces > 0 {
-            let nb_added_spaces = nb_added_spaces.min(SPACES.len());
-            self.compounds.push(Compound::raw_part(&SPACES, 0, nb_added_spaces));
-        }
     }
 }
 // Tests trimming composite

@@ -1,12 +1,20 @@
 use std::fmt::{self, Write};
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Alignment {
+    Unspecified,
+    Left,
+    Center,
+    Right,
+}
+
 /// a Compound is a part of a line with a consistent styling.
 /// It can be part of word, several words, some inline code, or even the whole line.
 #[derive(Clone)]
 pub struct Compound<'s> {
     src: &'s str, // the source string from which the compound is a part
-    start: usize, // start index in bytes
-    end: usize,
+    start: usize, // start index in bytes, included
+    end: usize,   // end index in bytes, excluded
     pub bold: bool,
     pub italic: bool,
     pub code: bool,
@@ -167,14 +175,14 @@ impl<'s> Compound<'s> {
 }
 
 impl fmt::Display for Compound<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())?;
         Ok(())
     }
 }
 
 impl fmt::Debug for Compound<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.bold {
             f.write_char('B')?;
         }
@@ -192,7 +200,7 @@ impl fmt::Debug for Compound<'_> {
 }
 
 impl PartialEq for Compound<'_> {
-    fn eq(&self, other: &Compound) -> bool {
+    fn eq(&self, other: &Compound<'_>) -> bool {
         self.as_str() == other.as_str()
             && self.bold == other.bold
             && self.italic == other.italic

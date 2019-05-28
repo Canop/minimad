@@ -1,7 +1,7 @@
 use crate::composite::{Composite, CompositeStyle};
 use crate::compound::Compound;
 use crate::line::*;
-use crate::tbl::TableRow;
+use crate::tbl::{TableRow};
 use std::cmp;
 
 /// count the number of '#' at start. Return 0 if they're
@@ -63,7 +63,7 @@ pub struct LineParser<'s> {
 }
 
 impl<'s> LineParser<'s> {
-    pub fn from(src: &'s str) -> LineParser {
+    pub fn from(src: &'s str) -> LineParser<'_> {
         LineParser {
             src,
             idx: 0,
@@ -174,9 +174,13 @@ impl<'s> LineParser<'s> {
     pub fn line(&mut self) -> Line<'s> {
         assert_eq!(self.idx, 0, "A LineParser can only be consumed once");
         if self.src.starts_with("|") {
-            return Line::TableRow(TableRow {
+            let tr = TableRow {
                 cells: self.parse_cells(),
-            });
+            };
+            return match tr.as_table_alignments() {
+                Some(aligns) => Line::TableAlignments(aligns),
+                None => Line::TableRow(tr),
+            };
         }
         if self.src.starts_with("    ") {
             return Line::new_code(self.code_compound_from_idx(4));
@@ -291,6 +295,19 @@ mod tests {
                     style: CompositeStyle::Paragraph,
                     compounds: vec![Compound::raw_str("hi!"),],
                 }
+            ])
+        );
+    }
+
+    #[test]
+    fn table_alignments() {
+        assert_eq!(
+            Line::from("|-----|:--|:-:|----:"),
+            Line::new_table_alignments(vec![
+                Alignment::Unspecified,
+                Alignment::Left,
+                Alignment::Center,
+                Alignment::Right,
             ])
         );
     }

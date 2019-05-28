@@ -40,11 +40,11 @@ mod tbl;
 mod text;
 
 pub use composite::{Composite, CompositeStyle};
-pub use compound::Compound;
+pub use compound::{Alignment, Compound};
 pub use line::Line;
 pub use line::MAX_HEADER_DEPTH;
 pub use text::Text;
-pub use tbl::TableRow;
+pub use tbl::{TableAlignments, TableRow};
 
 /// parse a markdown text
 pub fn parse_text<'s>(md: &'s str) -> Text<'s> {
