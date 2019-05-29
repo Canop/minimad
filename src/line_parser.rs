@@ -147,6 +147,7 @@ impl<'s> LineParser<'s> {
         while self.idx < self.src.len() {
             self.idx += 1;
             let style = if self.src[self.idx..].starts_with("* ") {
+                self.idx += 2;
                 CompositeStyle::ListItem
             } else {
                 CompositeStyle::Paragraph
