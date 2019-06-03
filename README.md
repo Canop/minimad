@@ -14,7 +14,7 @@
 [s4]: https://miaou.dystroy.org/static/shields/room.svg
 [l4]: https://miaou.dystroy.org/3
 
-A *very* simple, non universal purpose, markdown parser.
+A *very* simple, non universal purpose, dependency free markdown parser.
 
 If you're looking for a Markdown parser, this one is probably *not* the one you want.
 

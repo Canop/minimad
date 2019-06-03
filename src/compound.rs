@@ -8,6 +8,12 @@ pub enum Alignment {
     Right,
 }
 
+impl Default for Alignment {
+    fn default() -> Self {
+        Alignment::Unspecified
+    }
+}
+
 /// a Compound is a part of a line with a consistent styling.
 /// It can be part of word, several words, some inline code, or even the whole line.
 #[derive(Clone)]
