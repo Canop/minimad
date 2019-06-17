@@ -42,12 +42,16 @@ assert_eq!(
 );
 
 assert_eq!(
-    parse_inline("*Italic then **bold and italic `and some *code*`** and italic*"),
-    Composite::from(vec![
-        Compound::raw_str("Italic then ").italic(),
-        Compound::raw_str("bold and italic ").bold().italic(),
-        Compound::raw_str("and some *code*").bold().italic().code(),
-        Compound::raw_str(" and italic").italic(),
+    Line::from("Hello ~~wolrd~~ **World**. *Code*: `sqrt(π/2)`"),
+    Line::new_paragraph(vec![
+	Compound::raw_str("Hello "),
+	Compound::raw_str("wolrd").strikeout(),
+	Compound::raw_str(" "),
+	Compound::raw_str("World").bold(),
+	Compound::raw_str(". "),
+	Compound::raw_str("Code").italic(),
+	Compound::raw_str(": "),
+	Compound::raw_str("sqrt(π/2)").code(),
     ])
 );
 ```

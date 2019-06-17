@@ -60,6 +60,7 @@ pub struct LineParser<'s> {
     bold: bool,
     italic: bool,
     code: bool,
+    strikeout: bool,
 }
 
 impl<'s> LineParser<'s> {
@@ -70,6 +71,7 @@ impl<'s> LineParser<'s> {
             bold: false,
             italic: false,
             code: false,
+            strikeout: false,
         }
     }
     fn close_compound(&mut self, end: usize, tag_length: usize, compounds: &mut Vec<Compound<'s>>) {
@@ -81,16 +83,18 @@ impl<'s> LineParser<'s> {
                 self.bold,
                 self.italic,
                 self.code,
+                self.strikeout,
             ));
         }
         self.idx = end + tag_length;
     }
     fn code_compound_from_idx(&self, idx: usize) -> Compound<'s> {
-        Compound::new(&self.src, idx, self.src.len(), false, false, true)
+        Compound::new(&self.src, idx, self.src.len(), false, false, true, false)
     }
     fn parse_compounds(&mut self, stop_on_pipe: bool) -> Vec<Compound<'s>> {
         let mut compounds = Vec::new();
         let mut after_first_star = false;
+        let mut after_first_tilde = false;
         for (idx, char) in self.src.char_indices().skip(self.idx) {
             if self.code {
                 // only one thing matters: whether we're closing the inline code
@@ -105,6 +109,10 @@ impl<'s> LineParser<'s> {
                         self.close_compound(idx - 1, 2, &mut compounds);
                         self.bold ^= true;
                     }
+                    '~' => {
+                        after_first_tilde = true;
+                        // we don't know yet if it's one or two tildes
+                    }
                     '|' if stop_on_pipe => {
                         self.close_compound(idx - 1, 1, &mut compounds);
                         return compounds;
@@ -117,11 +125,34 @@ impl<'s> LineParser<'s> {
                     }
                 }
                 after_first_star = false;
+            } else if after_first_tilde {
+                match char {
+                    '*' => {
+                        after_first_star = true;
+                        // we don't know yet if it's one or two stars
+                    }
+                    '~' => {
+                        // this is the second tilde
+                        self.close_compound(idx - 1, 2, &mut compounds);
+                        self.strikeout ^= true;
+                    }
+                    '|' if stop_on_pipe => {
+                        self.close_compound(idx - 1, 1, &mut compounds);
+                        return compounds;
+                    }
+                    _ => {
+                        // there was only one tilde, which means nothing
+                    }
+                }
+                after_first_tilde = false;
             } else {
                 match char {
                     '*' => {
                         after_first_star = true;
                         // we don't know yet if it's one or two stars
+                    }
+                    '~' => {
+                        after_first_tilde = true;
                     }
                     '|' if stop_on_pipe => {
                         self.close_compound(idx, 0, &mut compounds);
@@ -152,9 +183,10 @@ impl<'s> LineParser<'s> {
             } else {
                 CompositeStyle::Paragraph
             };
-            self.code = false;
             self.bold = false;
             self.italic = false;
+            self.code = false;
+            self.strikeout = false;
             let compounds = self.parse_compounds(true);
             let mut composite = Composite { style, compounds };
             composite.trim_spaces();
@@ -212,9 +244,11 @@ mod tests {
     #[test]
     fn simple_line_parsing() {
         assert_eq!(
-            Line::from("Hello **World**. *Code*: `sqrt(π/2)`"),
+            Line::from("Hello ~~wolrd~~ **World**. *Code*: `sqrt(π/2)`"),
             Line::new_paragraph(vec![
                 Compound::raw_str("Hello "),
+                Compound::raw_str("wolrd").strikeout(),
+                Compound::raw_str(" "),
                 Compound::raw_str("World").bold(),
                 Compound::raw_str(". "),
                 Compound::raw_str("Code").italic(),

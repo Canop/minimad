@@ -24,6 +24,7 @@ pub struct Compound<'s> {
     pub bold: bool,
     pub italic: bool,
     pub code: bool,
+    pub strikeout: bool,
 }
 
 impl<'s> Compound<'s> {
@@ -38,6 +39,7 @@ impl<'s> Compound<'s> {
             bold: false,
             italic: false,
             code: false,
+            strikeout: false,
         }
     }
     /// return a sub part of the compound, with the same syling
@@ -52,6 +54,7 @@ impl<'s> Compound<'s> {
             bold: self.bold,
             italic: self.italic,
             code: self.code,
+            strikeout: self.strikeout,
         }
     }
     /// return a sub part at end of the compound, with the same syling
@@ -66,6 +69,7 @@ impl<'s> Compound<'s> {
             bold: self.bold,
             italic: self.italic,
             code: self.code,
+            strikeout: self.strikeout,
         }
     }
     // make a raw unstyled compound from part of a string
@@ -79,6 +83,7 @@ impl<'s> Compound<'s> {
             bold: false,
             italic: false,
             code: false,
+            strikeout: false,
         }
     }
     #[inline(always)]
@@ -89,6 +94,7 @@ impl<'s> Compound<'s> {
         bold: bool,
         italic: bool,
         code: bool,
+        strikeout: bool,
     ) -> Compound<'s> {
         Compound {
             src,
@@ -97,6 +103,7 @@ impl<'s> Compound<'s> {
             italic,
             bold,
             code,
+            strikeout,
         }
     }
     #[inline(always)]
@@ -115,6 +122,11 @@ impl<'s> Compound<'s> {
         self
     }
     #[inline(always)]
+    pub fn strikeout(mut self) -> Compound<'s> {
+        self.strikeout = true;
+        self
+    }
+    #[inline(always)]
     pub fn set_bold(&mut self, bold: bool) {
         self.bold = bold;
     }
@@ -125,6 +137,10 @@ impl<'s> Compound<'s> {
     #[inline(always)]
     pub fn set_code(&mut self, code: bool) {
         self.code = code;
+    }
+    #[inline(always)]
+    pub fn set_strikeout(&mut self, strikeout: bool) {
+        self.strikeout = strikeout;
     }
     #[inline(always)]
     pub fn as_str(&self) -> &'s str {
@@ -198,6 +214,9 @@ impl fmt::Debug for Compound<'_> {
         if self.code {
             f.write_char('C')?;
         }
+        if self.strikeout {
+            f.write_char('S')?;
+        }
         f.write_char('"')?;
         f.write_str(self.as_str())?;
         f.write_char('"')?;
@@ -211,6 +230,7 @@ impl PartialEq for Compound<'_> {
             && self.bold == other.bold
             && self.italic == other.italic
             && self.code == other.code
+            && self.strikeout == other.strikeout
     }
 }
 impl Eq for Compound<'_> {}
