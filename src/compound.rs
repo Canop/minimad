@@ -19,8 +19,8 @@ impl Default for Alignment {
 #[derive(Clone)]
 pub struct Compound<'s> {
     src: &'s str, // the source string from which the compound is a part
-    start: usize, // start index in bytes, included
-    end: usize,   // end index in bytes, excluded
+    pub start: usize, // start index in bytes, included
+    pub end: usize,   // end index in bytes, excluded
     pub bold: bool,
     pub italic: bool,
     pub code: bool,
