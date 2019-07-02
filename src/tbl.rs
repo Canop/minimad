@@ -7,7 +7,7 @@ pub struct TableRow<'a> {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct TableAlignments {
+pub struct TableRule {
     pub cells: Vec<Alignment>,
 }
 
@@ -21,8 +21,8 @@ impl<'a> TableRow<'a> {
     ///  stabilized. If it proves necessary I'll do a
     ///  line_parser::parse_cell (and parse_compound won't take
     ///  a bool paramater anymore).
-    pub fn as_table_alignments(&self) -> Option<TableAlignments> {
-        let mut formats = TableAlignments{
+    pub fn as_table_alignments(&self) -> Option<TableRule> {
+        let mut formats = TableRule{
             cells: Vec::new()
         };
         for cell in &self.cells {

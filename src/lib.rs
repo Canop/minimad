@@ -44,7 +44,7 @@ pub use compound::{Alignment, Compound};
 pub use line::Line;
 pub use line::MAX_HEADER_DEPTH;
 pub use text::Text;
-pub use tbl::{TableAlignments, TableRow};
+pub use tbl::{TableRule, TableRow};
 
 /// parse a markdown text
 pub fn parse_text<'s>(md: &'s str) -> Text<'s> {

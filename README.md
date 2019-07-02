@@ -14,18 +14,18 @@
 [s4]: https://miaou.dystroy.org/static/shields/room.svg
 [l4]: https://miaou.dystroy.org/3
 
-A *very* simple, non universal purpose, dependency free markdown parser.
+A simple, non universal purpose, dependency free, markdown parser.
 
-If you're looking for a Markdown parser, this one is probably *not* the one you want.
+If you're looking for a Markdown parser, this one is probably *not* the one you want:
 
-Minimad can be used on its own but is first designed for the [termimad](https://github.com/Canop/termimad) lib, which displays static and dynamic markdown snippets on a terminal without mixing the skin with the code.
+Minimad can be used on its own but is first designed for the [termimad](https://github.com/Canop/termimad) lib, which displays static and dynamic markdown snippets on a terminal without mixing the skin with the code. Minimad sports a line-oriented flat structure (i.e. not a tree) which might not suit your needs.
 
 ### Usage
 
 
 ```toml
 [dependencies]
-minimad = "0.3"
+minimad = "0.4"
 ```
 
 ```rust

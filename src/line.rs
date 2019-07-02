@@ -1,16 +1,17 @@
 use crate::composite::{Composite, CompositeStyle};
 use crate::compound::{Compound, Alignment};
 use crate::line_parser::LineParser;
-use crate::tbl::{TableRow, TableAlignments};
+use crate::tbl::{TableRow, TableRule};
 
 pub const MAX_HEADER_DEPTH: usize = 8;
 
 /// a parsed line
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Line<'a> {
-    Normal(Composite<'a>),
-    TableRow(TableRow<'a>),
-    TableAlignments(TableAlignments), // FIXME rename TableRule
+    Normal(Composite<'a>),  //
+    TableRow(TableRow<'a>), // a normal table row, with cells having content
+    TableRule(TableRule),   // a separator/border in a table, optionally defining alignments
+    HorizontalRule,         // an horizontal line dividing the screen
 }
 
 impl Line<'_> {
@@ -37,6 +38,12 @@ impl Line<'_> {
             compounds: vec![compound],
         })
     }
+    pub fn new_quote(compounds: Vec<Compound<'_>>) -> Line<'_> {
+        Line::Normal(Composite {
+            style: CompositeStyle::Quote,
+            compounds,
+        })
+    }
     pub fn new_list_item(compounds: Vec<Compound<'_>>) -> Line<'_> {
         Line::Normal(Composite {
             style: CompositeStyle::ListItem,
@@ -53,7 +60,7 @@ impl Line<'_> {
         Line::TableRow(TableRow { cells })
     }
     pub fn new_table_alignments(cells: Vec<Alignment>) -> Line<'static> {
-        Line::TableAlignments(TableAlignments { cells })
+        Line::TableRule(TableRule { cells })
     }
     #[inline(always)]
     pub fn is_table_row(&self) -> bool {

@@ -11,9 +11,11 @@ pub enum CompositeStyle {
     Header(u8), // never 0, and <= MAX_HEADER_DEPTH
     ListItem,
     Code,
+    Quote,
 }
 
 /// a composite is a monoline sequence of compounds.
+/// It's defined by
 /// - the global style of the composite, if any
 /// - a vector of styled parts
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -56,16 +58,23 @@ impl<'a> Composite<'a> {
             _ => false,
         }
     }
-    // return the total number of characters in the composite
-    //
-    // Example
-    // ```rust
-    // assert_eq!(Line::from("τ:`2π`").char_length(), 4);
-    // ```
-    //
-    // This may not be the visible width: a renderer can
-    //  add some things (maybe some caracters) to wrap inline code,
-    //  or a bullet in front of a list item
+    #[inline(always)]
+    pub fn is_quote(&self) -> bool {
+        match self.style {
+            CompositeStyle::Quote { .. } => true,
+            _ => false,
+        }
+    }
+    /// return the total number of characters in the composite
+    ///
+    /// Example
+    /// ```rust
+    /// assert_eq!(minimad::Line::from("τ:`2π`").char_length(), 4);
+    /// ```
+    ///
+    /// This may not be the visible width: a renderer can
+    ///  add some things (maybe some caracters) to wrap inline code,
+    ///  or a bullet in front of a list item
     #[inline(always)]
     pub fn char_length(&self) -> usize {
         self.compounds
@@ -117,6 +126,7 @@ impl<'a> Composite<'a> {
         self.compounds.len() == 0
     }
 }
+
 // Tests trimming composite
 #[cfg(test)]
 mod tests {

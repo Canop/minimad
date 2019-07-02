@@ -180,6 +180,9 @@ impl<'s> LineParser<'s> {
             let style = if self.src[self.idx..].starts_with("* ") {
                 self.idx += 2;
                 CompositeStyle::ListItem
+            } else if self.src[self.idx..].starts_with("> ") {
+                self.idx += 2;
+                CompositeStyle::Quote
             } else {
                 CompositeStyle::Paragraph
             };
@@ -211,7 +214,7 @@ impl<'s> LineParser<'s> {
                 cells: self.parse_cells(),
             };
             return match tr.as_table_alignments() {
-                Some(aligns) => Line::TableAlignments(aligns),
+                Some(aligns) => Line::TableRule(aligns),
                 None => Line::TableRow(tr),
             };
         }
@@ -225,13 +228,40 @@ impl<'s> LineParser<'s> {
             self.idx = 2;
             return Line::new_list_item(self.parse_compounds(false));
         }
+        if self.src.starts_with("> ") {
+            self.idx = 2;
+            return Line::new_quote(self.parse_compounds(false));
+        }
         let header_level = header_level(self.src);
         if header_level > 0 {
             self.idx = header_level + 1;
             return Line::new_header(header_level as u8, self.parse_compounds(false));
         }
-        Line::new_paragraph(self.parse_compounds(false))
+        let compounds = self.parse_compounds(false);
+        if compounds_are_rule(&compounds) {
+            Line::HorizontalRule
+        } else {
+            Line::new_paragraph(compounds)
+        }
     }
+}
+
+const DASH: u8 = 45;
+
+fn compounds_are_rule(compounds: &Vec<Compound<'_>>) -> bool {
+    if compounds.len() != 1 {
+        return false;
+    }
+    let s = compounds[0].as_str();
+    if s.len() < 3 {
+        return false;
+    }
+    for c in s.as_bytes() {
+        if *c != DASH {
+            return false;
+        }
+    }
+    return true;
 }
 
 /// Tests of line parsing
@@ -272,6 +302,18 @@ mod tests {
     }
 
     #[test]
+    fn quote() {
+        assert_eq!(
+            Line::from("> Veni, vidi, *vici*!"),
+            Line::new_quote(vec![
+                Compound::raw_str("Veni, vidi, "),
+                Compound::raw_str("vici").italic(),
+                Compound::raw_str("!"),
+            ])
+        );
+    }
+
+    #[test]
     fn line_of_code() {
         assert_eq!(
             Line::from("    let r = Math.sin(π/2) * 7"),
@@ -299,6 +341,14 @@ mod tests {
     }
 
     #[test]
+    fn horizontal_rule() {
+        assert_eq!(
+            Line::from("----------"),
+            Line::HorizontalRule,
+        );
+    }
+
+    #[test]
     fn styled_header() {
         assert_eq!(
             Line::from("## a header with some **bold**!"),
@@ -316,7 +366,7 @@ mod tests {
     #[test]
     fn table_row() {
         assert_eq!(
-            Line::from("| bla |*italic*|hi!|"),
+            Line::from("| bla |*italic*|hi!|> some quote"),
             Line::new_table_row(vec![
                 Composite {
                     style: CompositeStyle::Paragraph,
@@ -329,6 +379,10 @@ mod tests {
                 Composite {
                     style: CompositeStyle::Paragraph,
                     compounds: vec![Compound::raw_str("hi!"),],
+                },
+                Composite {
+                    style: CompositeStyle::Quote,
+                    compounds: vec![Compound::raw_str("some quote"),],
                 }
             ])
         );
