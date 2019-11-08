@@ -119,7 +119,7 @@ impl<'s> LineParser<'s> {
                     }
                     _ => {
                         // there was only one star
-                        // Note that we don't handle a tag just after a star (execpt in code)
+                        // Note that we don't handle a tag just after a star (except in code)
                         self.close_compound(idx - 1, 1, &mut compounds);
                         self.italic ^= true;
                     }

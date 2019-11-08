@@ -1,5 +1,7 @@
 use std::fmt::{self, Write};
 
+
+/// Left, Center, Right or Unspecified
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Alignment {
     Unspecified,
@@ -28,8 +30,8 @@ pub struct Compound<'s> {
 }
 
 impl<'s> Compound<'s> {
-    // make a raw unstyled compound
-    // Involves no parsing
+    /// make a raw unstyled compound
+    /// Involves no parsing
     #[inline(always)]
     pub fn raw_str(src: &'s str) -> Compound<'s> {
         Compound {
