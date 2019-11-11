@@ -20,7 +20,7 @@ impl Default for Alignment {
 /// It can be part of word, several words, some inline code, or even the whole line.
 #[derive(Clone)]
 pub struct Compound<'s> {
-    src: &'s str, // the source string from which the compound is a part
+    pub src: &'s str, // the source string from which the compound is a part
     pub start: usize, // start index in bytes, included
     pub end: usize,   // end index in bytes, excluded
     pub bold: bool,
@@ -44,9 +44,15 @@ impl<'s> Compound<'s> {
             strikeout: false,
         }
     }
-    /// return a sub part of the compound, with the same syling
+    /// change the content but keeps the style arguments
+    pub fn set_str(&mut self, src: &'s str) {
+        self.src = src;
+        self.start = 0;
+        self.end = src.len();
+    }
+    /// return a sub part of the compound, with the same styling
     /// r_start is relative, that is 0 is the index of the first
-    /// char of this compound.
+    /// byte of this compound.
     #[inline(always)]
     pub fn sub(&self, r_start: usize, r_end: usize) -> Compound<'s> {
         Compound {
@@ -59,7 +65,31 @@ impl<'s> Compound<'s> {
             strikeout: self.strikeout,
         }
     }
-    /// return a sub part at end of the compound, with the same syling
+    /// return a sub part of the compound, with the same styling
+    /// r_start is relative, that is 0 is the index of the first
+    /// char of this compound.
+    ///
+    /// The difference with `sub` is that this method is unicode
+    /// aware and counts the chars instead of asking for the bytes
+    #[inline(always)]
+    pub fn sub_chars(&self, r_start: usize, r_end: usize) -> Compound<'s> {
+        let mut rb_start = 0;
+        let mut rb_end = 0;
+        for (char_idx, (byte_idx, _)) in self.as_str().char_indices().enumerate() {
+            if char_idx == r_start {
+                rb_start = byte_idx;
+            } else if char_idx == r_end {
+                rb_end = byte_idx;
+                break;
+            }
+        }
+        if rb_end == 0 && rb_end != 0 {
+            self.tail(rb_start)
+        } else {
+            self.sub(rb_start, rb_end)
+        }
+    }
+    /// return a sub part at end of the compound, with the same styling
     /// r_start is relative, that is if you give 0 you get a clone of
     /// this compound
     #[inline(always)]
@@ -73,6 +103,23 @@ impl<'s> Compound<'s> {
             code: self.code,
             strikeout: self.strikeout,
         }
+    }
+    /// return a sub part at end of the compound, with the same styling
+    /// r_start is relative, that is if you give 0 you get a clone of
+    /// this compound
+    ///
+    /// The difference with `tail` is that this method is unicode
+    /// aware and counts the chars instead of asking for the bytes
+    #[inline(always)]
+    pub fn tail_chars(&self, r_start: usize) -> Compound<'s> {
+        let mut rb_start = 0;
+        for (char_idx, (byte_idx, _)) in self.as_str().char_indices().enumerate() {
+            rb_start = byte_idx;
+            if char_idx == r_start {
+                break;
+            }
+        }
+        self.tail(rb_start)
     }
     // make a raw unstyled compound from part of a string
     // Involves no parsing
