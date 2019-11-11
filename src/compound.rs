@@ -1,6 +1,5 @@
 use std::fmt::{self, Write};
 
-
 /// Left, Center, Right or Unspecified
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Alignment {
