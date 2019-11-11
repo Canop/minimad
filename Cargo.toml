@@ -11,3 +11,4 @@ categories = ["gui", "parser-implementations"]
 readme = "README.md"
 
 [dependencies]
+lazy_static = "1"

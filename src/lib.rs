@@ -37,14 +37,21 @@ mod compound;
 mod line;
 mod line_parser;
 mod tbl;
+mod template;
 mod text;
 
-pub use composite::{Composite, CompositeStyle};
-pub use compound::{Alignment, Compound};
-pub use line::Line;
-pub use line::MAX_HEADER_DEPTH;
-pub use text::Text;
-pub use tbl::{TableRule, TableRow};
+pub use {
+    composite::{Composite, CompositeStyle},
+    compound::{Alignment, Compound},
+    line::Line,
+    line::MAX_HEADER_DEPTH,
+    text::Text,
+    tbl::{TableRule, TableRow},
+    template::{InlineTemplate},
+};
+
+#[macro_use]
+extern crate lazy_static;
 
 /// parse a markdown text
 pub fn parse_text<'s>(md: &'s str) -> Text<'s> {
