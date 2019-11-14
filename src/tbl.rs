@@ -22,9 +22,7 @@ impl<'a> TableRow<'a> {
     ///  line_parser::parse_cell (and parse_compound won't take
     ///  a bool paramater anymore).
     pub fn as_table_alignments(&self) -> Option<TableRule> {
-        let mut formats = TableRule{
-            cells: Vec::new()
-        };
+        let mut formats = TableRule { cells: Vec::new() };
         for cell in &self.cells {
             if cell.compounds.len() != 1 {
                 return None;
@@ -50,4 +48,3 @@ impl<'a> TableRow<'a> {
         Some(formats)
     }
 }
-

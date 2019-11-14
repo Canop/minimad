@@ -1,7 +1,7 @@
 use crate::composite::{Composite, CompositeStyle};
 use crate::compound::Compound;
 use crate::line::*;
-use crate::tbl::{TableRow};
+use crate::tbl::TableRow;
 use std::cmp;
 
 /// count the number of '#' at start. Return 0 if they're
@@ -54,6 +54,7 @@ fn header_level_count() {
 ///       a text: ListItem, TableRow, Code.
 ///
 /// Normally not used directly but though `line::from(str)`
+#[derive(Debug)]
 pub struct LineParser<'s> {
     src: &'s str,
     idx: usize, // current index in string, in bytes
@@ -111,11 +112,18 @@ impl<'s> LineParser<'s> {
                     }
                     '~' => {
                         after_first_tilde = true;
+                        self.close_compound(idx - 1, 2, &mut compounds);
                         // we don't know yet if it's one or two tildes
+                        self.italic ^= true;
                     }
                     '|' if stop_on_pipe => {
                         self.close_compound(idx - 1, 1, &mut compounds);
                         return compounds;
+                    }
+                    '`' => {
+                        self.close_compound(idx - 1, 2, &mut compounds);
+                        self.italic ^= true;
+                        self.code = true;
                     }
                     _ => {
                         // there was only one star
@@ -167,7 +175,10 @@ impl<'s> LineParser<'s> {
             }
         }
         let mut idx = self.src.len();
-        if after_first_star {
+        if after_first_star && self.italic {
+            idx -= 1;
+        }
+        if after_first_tilde && self.strikeout {
             idx -= 1;
         }
         self.close_compound(idx, 0, &mut compounds);
@@ -195,7 +206,7 @@ impl<'s> LineParser<'s> {
             composite.trim_spaces();
             cells.push(composite);
         }
-        if cells.len() > 0 && cells[cells.len()-1].compounds.len()==0 {
+        if cells.len() > 0 && cells[cells.len() - 1].compounds.len() == 0 {
             cells.pop();
         }
         cells
@@ -204,7 +215,7 @@ impl<'s> LineParser<'s> {
         assert_eq!(self.idx, 0, "A LineParser can only be consumed once");
         Composite {
             style: CompositeStyle::Paragraph,
-            compounds: self.parse_compounds(false)
+            compounds: self.parse_compounds(false),
         }
     }
     pub fn line(&mut self) -> Line<'s> {
@@ -314,6 +325,69 @@ mod tests {
     }
 
     #[test]
+    fn code_after_italic() {
+        assert_eq!(
+            Line::from("*name=*`code`"),
+            Line::new_paragraph(vec![
+                Compound::raw_str("name=").italic(),
+                Compound::raw_str("code").code(),
+            ])
+        );
+    }
+
+    #[test]
+    /// this test is borderline. It wouldn't be very problematic to not support this case.
+    /// A regression would thus be acceptable here (but I want it to be noticed)
+    fn single_star() {
+        assert_eq!(
+            Line::from("*"),
+            Line::new_paragraph(vec![Compound::raw_str("*"),])
+        );
+    }
+
+    #[test]
+    /// this test is borderline. It wouldn't be very problematic to not support it.
+    /// A regression would thus be acceptable here (but I want it to be noticed)
+    fn single_tilde() {
+        assert_eq!(
+            Line::from("~"),
+            Line::new_paragraph(vec![Compound::raw_str("~"),])
+        );
+    }
+
+    #[test]
+    fn striked_after_italic() {
+        assert_eq!(
+            Line::from("*italic*~~striked~~"),
+            Line::new_paragraph(vec![
+                Compound::raw_str("italic").italic(),
+                Compound::raw_str("striked").strikeout(),
+            ])
+        );
+    }
+
+    #[test]
+    fn tight_sequence() {
+        assert_eq!(
+            Line::from(
+                "*italic*`code`**bold**`code`*italic**italic+bold***`code`*I*~~striked~~*I*"
+            ),
+            Line::new_paragraph(vec![
+                Compound::raw_str("italic").italic(),
+                Compound::raw_str("code").code(),
+                Compound::raw_str("bold").bold(),
+                Compound::raw_str("code").code(),
+                Compound::raw_str("italic").italic(),
+                Compound::raw_str("italic+bold").italic().bold(),
+                Compound::raw_str("code").code(),
+                Compound::raw_str("I").italic(),
+                Compound::raw_str("striked").strikeout(),
+                Compound::raw_str("I").italic(),
+            ])
+        );
+    }
+
+    #[test]
     fn line_of_code() {
         assert_eq!(
             Line::from("    let r = Math.sin(π/2) * 7"),
@@ -342,10 +416,7 @@ mod tests {
 
     #[test]
     fn horizontal_rule() {
-        assert_eq!(
-            Line::from("----------"),
-            Line::HorizontalRule,
-        );
+        assert_eq!(Line::from("----------"), Line::HorizontalRule,);
     }
 
     #[test]

@@ -295,7 +295,11 @@ fn test_trim_left() {
 
     let mut left = Compound::raw_str("text");
     left.trim_left_spaces();
-    assert_eq!(left, Compound::raw_str("text"), "not trimming when no space");
+    assert_eq!(
+        left,
+        Compound::raw_str("text"),
+        "not trimming when no space"
+    );
 }
 
 #[test]
@@ -310,5 +314,9 @@ fn test_trim_right() {
 
     let mut left = Compound::raw_str("text");
     left.trim_right_spaces();
-    assert_eq!(left, Compound::raw_str("text"), "not trimming when no space");
+    assert_eq!(
+        left,
+        Compound::raw_str("text"),
+        "not trimming when no space"
+    );
 }

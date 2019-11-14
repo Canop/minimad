@@ -1,5 +1,5 @@
 use crate::composite::{Composite, CompositeStyle};
-use crate::compound::{Compound, Alignment};
+use crate::compound::{Alignment, Compound};
 use crate::line_parser::LineParser;
 use crate::tbl::{TableRow, TableRule};
 

@@ -181,7 +181,6 @@ impl<'a> Composite<'a> {
             }
         }
     }
-
 }
 
 // Tests trimming composite
@@ -214,9 +213,7 @@ mod tests {
             left,
             Composite {
                 style: CompositeStyle::Paragraph,
-                compounds: vec![
-                    Compound::raw_str(" ").code(),
-                ]
+                compounds: vec![Compound::raw_str(" ").code(),]
             }
         );
     }

@@ -45,9 +45,9 @@ pub use {
     compound::{Alignment, Compound},
     line::Line,
     line::MAX_HEADER_DEPTH,
+    tbl::{TableRow, TableRule},
+    template::InlineTemplate,
     text::Text,
-    tbl::{TableRule, TableRow},
-    template::{InlineTemplate},
 };
 
 #[macro_use]
@@ -71,4 +71,3 @@ pub fn parse_line<'s>(md: &'s str) -> Line<'s> {
 pub fn parse_inline<'s>(md: &'s str) -> Composite<'s> {
     Composite::from_inline(md)
 }
-

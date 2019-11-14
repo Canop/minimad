@@ -1,7 +1,4 @@
-
-use crate::{
-    Composite,
-};
+use crate::Composite;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 struct Arg {
@@ -43,11 +40,11 @@ impl<'a> InlineTemplate<'a> {
                     if char.is_ascii_digit() {
                         let num: u8 = (char as u8) - b'0';
                         if start + 1 < idx {
-                            compounds.push(compound.sub(start, idx-1));
+                            compounds.push(compound.sub(start, idx - 1));
                         }
                         start = idx + 1;
                         args[usize::from(num)].compounds_idx.push(compounds.len());
-                        compounds.push(compound.sub(idx-1, start)); // placeholder
+                        compounds.push(compound.sub(idx - 1, start)); // placeholder
                     }
                     after_dollar = false;
                 } else {
@@ -62,23 +59,17 @@ impl<'a> InlineTemplate<'a> {
             }
         }
         composite.compounds = compounds;
-        InlineTemplate {
-            composite,
-            args,
-        }
+        InlineTemplate { composite, args }
     }
 
     pub fn raw_composite(&self) -> Composite<'a> {
         self.composite.clone()
     }
 
-    pub fn apply(
-        &self,
-        composite: &mut Composite<'a>,
-        arg_idx: usize,
-        value: &'a str,
-    ) {
-        if arg_idx > 9 { return; }
+    pub fn apply(&self, composite: &mut Composite<'a>, arg_idx: usize, value: &'a str) {
+        if arg_idx > 9 {
+            return;
+        }
         for compound_idx in &self.args[arg_idx].compounds_idx {
             composite.compounds[*compound_idx].set_str(value.as_ref());
         }
@@ -122,7 +113,6 @@ mod tests {
 
     #[test]
     fn simple_template_parsing() {
-
         let mut args = <[Arg; 10]>::default();
         args[0].add(3);
         args[1].add(1);
