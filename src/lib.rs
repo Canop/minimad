@@ -37,7 +37,8 @@ mod compound;
 mod line;
 mod line_parser;
 mod tbl;
-mod template;
+mod inline_template;
+mod text_template;
 mod text;
 
 pub use {
@@ -46,7 +47,8 @@ pub use {
     line::Line,
     line::MAX_HEADER_DEPTH,
     tbl::{TableRow, TableRule},
-    template::InlineTemplate,
+    inline_template::InlineTemplate,
+    text_template::TextTemplate,
     text::Text,
 };
 
