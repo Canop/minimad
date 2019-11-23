@@ -19,9 +19,7 @@ impl Default for Alignment {
 /// It can be part of word, several words, some inline code, or even the whole line.
 #[derive(Clone)]
 pub struct Compound<'s> {
-    pub src: &'s str, // the source string from which the compound is a part
-    pub start: usize, // start index in bytes, included
-    pub end: usize,   // end index in bytes, excluded
+    pub src: &'s str,
     pub bold: bool,
     pub italic: bool,
     pub code: bool,
@@ -34,9 +32,7 @@ impl<'s> Compound<'s> {
     #[inline(always)]
     pub fn raw_str(src: &'s str) -> Compound<'s> {
         Compound {
-            src,
-            start: 0,
-            end: src.len(),
+            src: src,
             bold: false,
             italic: false,
             code: false,
@@ -46,8 +42,6 @@ impl<'s> Compound<'s> {
     /// change the content but keeps the style arguments
     pub fn set_str(&mut self, src: &'s str) {
         self.src = src;
-        self.start = 0;
-        self.end = src.len();
     }
     /// return a sub part of the compound, with the same styling
     /// r_start is relative, that is 0 is the index of the first
@@ -55,9 +49,7 @@ impl<'s> Compound<'s> {
     #[inline(always)]
     pub fn sub(&self, r_start: usize, r_end: usize) -> Compound<'s> {
         Compound {
-            src: self.src,
-            start: self.start + r_start,
-            end: self.start + r_end,
+            src: &self.src[r_start..r_end],
             bold: self.bold,
             italic: self.italic,
             code: self.code,
@@ -94,9 +86,7 @@ impl<'s> Compound<'s> {
     #[inline(always)]
     pub fn tail(&self, r_start: usize) -> Compound<'s> {
         Compound {
-            src: self.src,
-            start: self.start + r_start,
-            end: self.end,
+            src: &self.src[r_start..],
             bold: self.bold,
             italic: self.italic,
             code: self.code,
@@ -120,14 +110,28 @@ impl<'s> Compound<'s> {
         }
         self.tail(rb_start)
     }
+
+    // shortens this compound by `tail_size` bytes and returns the tail
+    // as another compound
+    pub fn cut_tail(&mut self, tail_size: usize) -> Compound<'s> {
+        let cut = self.src.len() - tail_size;
+        let tail = Compound {
+            src: &self.src[cut..],
+            bold: self.bold,
+            italic: self.italic,
+            code: self.code,
+            strikeout: self.strikeout,
+        };
+        self.src = &self.src[0..cut];
+        tail
+    }
+
     // make a raw unstyled compound from part of a string
     // Involves no parsing
     #[inline(always)]
     pub fn raw_part(src: &'s str, start: usize, end: usize) -> Compound<'s> {
         Compound {
-            src,
-            start,
-            end,
+            src: &src[start..end],
             bold: false,
             italic: false,
             code: false,
@@ -145,9 +149,7 @@ impl<'s> Compound<'s> {
         strikeout: bool,
     ) -> Compound<'s> {
         Compound {
-            src,
-            start,
-            end,
+            src: &src[start..end],
             italic,
             bold,
             code,
@@ -192,7 +194,7 @@ impl<'s> Compound<'s> {
     }
     #[inline(always)]
     pub fn as_str(&self) -> &'s str {
-        &self.src[self.start..self.end]
+        self.src
     }
     #[inline(always)]
     pub fn char_length(&self) -> usize {
@@ -200,47 +202,7 @@ impl<'s> Compound<'s> {
     }
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
-        self.start >= self.end
-    }
-    pub fn trim_left_spaces(&mut self) {
-        let mut chars = self.as_str().char_indices();
-        let mut didx: usize;
-        loop {
-            if let Some((idx, char)) = chars.next() {
-                didx = idx;
-                if !char.is_whitespace() {
-                    break;
-                }
-            } else {
-                // the whole compound is made of white spaces
-                self.start = self.end;
-                return;
-            }
-        }
-        self.start += didx;
-    }
-    pub fn trim_right_spaces(&mut self) {
-        let mut chars = self.as_str().char_indices().rev();
-        let mut didx = 0;
-        loop {
-            if let Some((idx, char)) = chars.next() {
-                if !char.is_whitespace() {
-                    break;
-                }
-                didx = idx;
-            } else {
-                // the whole compound is made of white spaces
-                self.start = self.end;
-                return;
-            }
-        }
-        if didx > 0 {
-            self.end = self.start + didx;
-        }
-    }
-    pub fn trim_spaces(&mut self) {
-        self.trim_left_spaces();
-        self.trim_right_spaces();
+        self.src.is_empty()
     }
 }
 
@@ -283,40 +245,3 @@ impl PartialEq for Compound<'_> {
 }
 impl Eq for Compound<'_> {}
 
-#[test]
-fn test_trim_left() {
-    let mut left = Compound::raw_str(" ");
-    left.trim_left_spaces();
-    assert!(left.is_empty());
-
-    let mut left = Compound::raw_str("  text");
-    left.trim_left_spaces();
-    assert_eq!(left, Compound::raw_str("text"), "trim 2 spaces");
-
-    let mut left = Compound::raw_str("text");
-    left.trim_left_spaces();
-    assert_eq!(
-        left,
-        Compound::raw_str("text"),
-        "not trimming when no space"
-    );
-}
-
-#[test]
-fn test_trim_right() {
-    let mut left = Compound::raw_str(" ");
-    left.trim_right_spaces();
-    assert!(left.is_empty());
-
-    let mut left = Compound::raw_str("  text   ");
-    left.trim_right_spaces();
-    assert_eq!(left, Compound::raw_str("  text"));
-
-    let mut left = Compound::raw_str("text");
-    left.trim_right_spaces();
-    assert_eq!(
-        left,
-        Compound::raw_str("text"),
-        "not trimming when no space"
-    );
-}

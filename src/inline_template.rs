@@ -108,7 +108,7 @@ mod tests {
         self as minimad, // because the macro knows "minimad"
         composite::*,
         compound::*,
-        template::*,
+        inline_template::*,
     };
 
     #[test]

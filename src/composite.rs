@@ -85,7 +85,7 @@ impl<'a> Composite<'a> {
     }
     /// remove all white spaces at left, unless in inline code
     /// Empty compounds are cleaned out
-    pub fn trim_left_spaces(&mut self) {
+    pub fn trim_start_spaces(&mut self) {
         loop {
             if self.compounds.len() == 0 {
                 break;
@@ -93,7 +93,7 @@ impl<'a> Composite<'a> {
             if self.compounds[0].code {
                 break;
             }
-            self.compounds[0].trim_left_spaces();
+            self.compounds[0].src.trim_start_matches(char::is_whitespace);
             if self.compounds[0].is_empty() {
                 self.compounds.remove(0);
             } else {
@@ -103,7 +103,7 @@ impl<'a> Composite<'a> {
     }
     /// remove all white spaces at right, unless in inline code
     /// Empty compounds are cleaned out
-    pub fn trim_right_spaces(&mut self) {
+    pub fn trim_end_spaces(&mut self) {
         loop {
             if self.compounds.len() == 0 {
                 break;
@@ -112,7 +112,7 @@ impl<'a> Composite<'a> {
             if self.compounds[last].code {
                 break;
             }
-            self.compounds[last].trim_right_spaces();
+            self.compounds[last].src.trim_end_matches(char::is_whitespace);
             if self.compounds[last].is_empty() {
                 self.compounds.remove(last);
             } else {
@@ -121,8 +121,8 @@ impl<'a> Composite<'a> {
         }
     }
     pub fn trim_spaces(&mut self) {
-        self.trim_left_spaces();
-        self.trim_right_spaces();
+        self.trim_start_spaces();
+        self.trim_end_spaces();
     }
     pub fn is_empty(&self) -> bool {
         self.compounds.len() == 0
