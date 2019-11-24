@@ -93,7 +93,7 @@ impl<'a> Composite<'a> {
             if self.compounds[0].code {
                 break;
             }
-            self.compounds[0].src.trim_start_matches(char::is_whitespace);
+            self.compounds[0].src = self.compounds[0].src.trim_start_matches(char::is_whitespace);
             if self.compounds[0].is_empty() {
                 self.compounds.remove(0);
             } else {
@@ -112,7 +112,7 @@ impl<'a> Composite<'a> {
             if self.compounds[last].code {
                 break;
             }
-            self.compounds[last].src.trim_end_matches(char::is_whitespace);
+            self.compounds[last].src = self.compounds[last].src.trim_end_matches(char::is_whitespace);
             if self.compounds[last].is_empty() {
                 self.compounds.remove(last);
             } else {
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn empty_composite_trim() {
         let mut left = Composite::from_inline(" * * ** `` **  ");
-        left.trim_left_spaces();
+        left.trim_start_spaces();
         assert_eq!(left.compounds.len(), 0);
     }
 

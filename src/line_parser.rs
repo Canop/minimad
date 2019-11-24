@@ -206,7 +206,7 @@ impl<'s> LineParser<'s> {
             composite.trim_spaces();
             cells.push(composite);
         }
-        if cells.len() > 0 && cells[cells.len() - 1].compounds.len() == 0 {
+        if !cells.is_empty() && cells[cells.len() - 1].compounds.is_empty() {
             cells.pop();
         }
         cells
@@ -220,7 +220,7 @@ impl<'s> LineParser<'s> {
     }
     pub fn line(&mut self) -> Line<'s> {
         assert_eq!(self.idx, 0, "A LineParser can only be consumed once");
-        if self.src.starts_with("|") {
+        if self.src.starts_with('|') {
             let tr = TableRow {
                 cells: self.parse_cells(),
             };
@@ -232,7 +232,7 @@ impl<'s> LineParser<'s> {
         if self.src.starts_with("    ") {
             return Line::new_code(self.code_compound_from_idx(4));
         }
-        if self.src.starts_with("\t") {
+        if self.src.starts_with('\t') {
             return Line::new_code(self.code_compound_from_idx(1));
         }
         if self.src.starts_with("* ") {
@@ -259,7 +259,7 @@ impl<'s> LineParser<'s> {
 
 const DASH: u8 = 45;
 
-fn compounds_are_rule(compounds: &Vec<Compound<'_>>) -> bool {
+fn compounds_are_rule(compounds: &[Compound<'_>]) -> bool {
     if compounds.len() != 1 {
         return false;
     }

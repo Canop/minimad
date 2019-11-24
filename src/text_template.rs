@@ -1,7 +1,6 @@
-use std::error;
-use std::fmt;
 
 use crate::{
+    clean,
     composite::Composite,
     compound::Compound,
     line::Line,
@@ -25,6 +24,9 @@ struct CompoundArg<'s> {
 }
 
 
+/// a markdown template allowing you to replace some placeholders with
+/// given values, or to expand some sub-templates with repetitions
+/// (useful with lists, table rows, etc.)
 #[derive(Debug)]
 pub struct TextTemplate<'s> {
     text: Text<'s>,
@@ -33,10 +35,6 @@ pub struct TextTemplate<'s> {
 }
 
 
-fn is_valid_name_char(c: char) -> bool {
-    c.is_ascii_lowercase() || c == '_' || c == '-'
-}
-
 #[derive(Debug)]
 enum SubTemplateToken<'s> {
     None,
@@ -44,12 +42,42 @@ enum SubTemplateToken<'s> {
     End,
 }
 
+#[derive(Debug, Clone)]
+struct Replacement<'s, 'b> {
+    name: &'b str,
+    value: &'s str,
+}
+
+#[derive(Debug)]
+pub struct SubTemplateExpander<'s, 'b> {
+    name: &'b str,
+    raw_replacements: Vec<Replacement<'s, 'b>>, // replacements which are done as non interpreted compound content
+    md_replacements: Vec<Replacement<'s, 'b>>,
+}
+
+pub struct TextTemplateExpander<'s, 'b> {
+    template: &'b TextTemplate<'s>,
+    text: Text<'s>,
+    sub_expansions: Vec<SubTemplateExpander<'s, 'b>>,
+    md_replacements: Vec<Replacement<'s, 'b>>,
+    lines_to_add: Vec<Vec<Line<'s>>>,
+    lines_to_exclude: Vec<bool>, // true when the line must not be copied into the final text
+}
+
+//-------------------------------------------------------------------
+//                 Template parsing
+//-------------------------------------------------------------------
+
+fn is_valid_name_char(c: char) -> bool {
+    c.is_ascii_lowercase() || c == '_' || c == '-'
+}
+
 fn read_sub_template_token(md_line: &str) -> SubTemplateToken<'_> {
     let mut chars = md_line.chars();
     match (chars.next(), chars.next()) {
         (Some('$'), Some('{')) => { // "${" : maybe a sub-template opening
             let name = &md_line[2..];
-            if name.len() > 0 && name.chars().all(is_valid_name_char) {
+            if !name.is_empty() && name.chars().all(is_valid_name_char) {
                 SubTemplateToken::Start(name)
             } else {
                 SubTemplateToken::None
@@ -98,7 +126,6 @@ fn find_args<'s>(
                                 break;
                             }
                         }
-
                     }
                 }
             }
@@ -111,7 +138,6 @@ fn find_args<'s>(
     composite.compounds = compounds;
 }
 
-
 impl<'s> From<&'s str> for TextTemplate<'s> {
     /// build a template from a markdown text with placeholders like ${some-name}
     /// and sub-templates
@@ -122,7 +148,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
         let mut compound_args = Vec::new();
         let mut sub_templates = Vec::new();
         let mut current_sub_template: Option<SubTemplate<'_>> = None;
-        for md_line in md.lines() {
+        for md_line in clean::lines(md) {
             match read_sub_template_token(md_line) {
                 SubTemplateToken::Start(name) => {
                     current_sub_template = Some(SubTemplate{
@@ -193,17 +219,31 @@ impl<'s> TextTemplate<'s> {
     }
 }
 
-#[derive(Debug, Clone)]
-struct Replacement<'s, 'b> {
-    name: &'b str,
-    value: &'s str,
-}
+//-------------------------------------------------------------------
+//                          Expansion
+//-------------------------------------------------------------------
 
-#[derive(Debug)]
-pub struct SubTemplateExpander<'s, 'b> {
-    name: &'b str,
-    raw_replacements: Vec<Replacement<'s, 'b>>, // replacements which are done as non interpreted compound content
-    md_replacements: Vec<Replacement<'s, 'b>>,
+
+impl<'s, 'b> From<&'b TextTemplate<'s>> for TextTemplateExpander<'s, 'b> {
+    /// Build a new expander for the template. The expander stores the additions
+    /// done with `set`, `set_md`, `set_lines` or in the `sub` expanders.
+    fn from(template: &'b TextTemplate<'s>) -> Self {
+        // line insertion (from subtemplates and from set_lines) as well
+        // as line removals are postponed until final text building so
+        // that line indexes stay valid until that point). We just note
+        // what lines to add to or exclude from the final text.
+        let line_count = template.text.lines.len();
+        let lines_to_add = vec![Vec::new(); line_count];
+        let lines_to_exclude = vec![false; line_count];
+        Self {
+            template,
+            text: template.text.clone(),
+            sub_expansions: Vec::new(),
+            md_replacements: Vec::new(),
+            lines_to_add,
+            lines_to_exclude,
+        }
+    }
 }
 
 impl<'s, 'b> SubTemplateExpander<'s, 'b> {
@@ -219,12 +259,22 @@ impl<'s, 'b> SubTemplateExpander<'s, 'b> {
     }
 }
 
-pub struct TextTemplateExpander<'s, 'b> {
-    template: &'b TextTemplate<'s>,
-    text: Text<'s>,
-    sub_expansions: Vec<SubTemplateExpander<'s, 'b>>,
-    md_replacements: Vec<Replacement<'s, 'b>>,
+fn set_in_line<'s>(
+    line: &mut Line<'s>,
+    compound_arg: &CompoundArg<'s>,
+    value: &'s str,
+) {
+    match line {
+        Line::Normal(composite) => {
+            composite.compounds[compound_arg.compound_idx].set_str(value);
+        }
+        Line::TableRow(table_row) => {
+            table_row.cells[compound_arg.composite_idx].compounds[compound_arg.compound_idx].set_str(value);
+        }
+        _ => {},
+    }
 }
+
 
 fn set_in_text<'s>(
     template: &TextTemplate<'s>,
@@ -239,16 +289,11 @@ fn set_in_text<'s>(
             if idx < line_offset || idx - line_offset >= text.lines.len() {
                 continue; // can happen if a replacement name is present in the outside text
             }
-            let line = &mut text.lines[idx - line_offset];
-            match line {
-                Line::Normal(composite) => {
-                    composite.compounds[compound_arg.compound_idx].set_str(value);
-                }
-                Line::TableRow(table_row) => {
-                    table_row.cells[compound_arg.composite_idx].compounds[compound_arg.compound_idx].set_str(value);
-                }
-                _ => {},
-            }
+            set_in_line(
+                &mut text.lines[idx - line_offset],
+                compound_arg,
+                value,
+            );
         }
     }
 }
@@ -291,8 +336,8 @@ fn set_all_md_in_text<'s, 'b>(
     }
 }
 
-// replace a compound with several other ones.
-// Do nothing if the passed compounds vec is empty.
+/// replace a compound with several other ones.
+/// Do nothing if the passed compounds vec is empty.
 fn replace_compound<'s>(
     composite: &mut Composite<'s>, // composite in which to do the replacement
     mut compound_idx: usize,   // index in the composite of the compound to remove
@@ -308,19 +353,10 @@ fn replace_compound<'s>(
     }
 }
 
-impl<'s, 'b> From<&'b TextTemplate<'s>> for TextTemplateExpander<'s, 'b> {
-    fn from(template: &'b TextTemplate<'s>) -> Self {
-        Self {
-            template,
-            text: template.text.clone(),
-            sub_expansions: Vec::new(),
-            md_replacements: Vec::new(),
-        }
-    }
-}
-
 impl<'s, 'b> TextTemplateExpander<'s, 'b> {
 
+    /// replace placeholders with name `name` with the given value, non interpreted
+    /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
     pub fn set(&mut self, name: &str, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
         set_in_text(
             &self.template,
@@ -332,12 +368,46 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
         self
     }
 
-    /// replace placeholder with name `name` with the given value, interpreted as markdown
+    /// replace placeholders with name `name` with the given value, interpreted as markdown
     pub fn set_md(&mut self, name: &'b str, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
         self.md_replacements.push(Replacement { name, value });
         self
     }
 
+    pub fn set_lines(&mut self, name: &'b str, raw_lines: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+        for compound_arg in &self.template.compound_args {
+            if compound_arg.name == name {
+                // the line holding the compound is now considered a template, it's removed
+                self.lines_to_exclude[compound_arg.line_idx] = true;
+                for value in clean::lines(raw_lines) {
+                    let mut line = self.text.lines[compound_arg.line_idx].clone();
+                    set_in_line(
+                        &mut line,
+                        compound_arg,
+                        value,
+                    );
+                    self.lines_to_add[compound_arg.line_idx].push(line);
+                }
+            }
+        }
+        self
+    }
+
+    pub fn set_lines_md(&mut self, name: &'b str, md: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+        for compound_arg in &self.template.compound_args {
+            if compound_arg.name == name {
+                // the line holding the compound is now considered a template, it's removed
+                self.lines_to_exclude[compound_arg.line_idx] = true;
+                for line in md.lines().map(|md| LineParser::from(md).line()) {
+                    self.lines_to_add[compound_arg.line_idx].push(line);
+                }
+            }
+        }
+        self
+    }
+
+    /// prepare expansion of a sub template and return a mutable reference to the
+    ///  object in which to set compound replacements
     pub fn sub(&mut self, name: &'b str) -> &mut SubTemplateExpander<'s, 'b> {
         let sub = SubTemplateExpander {
             name,
@@ -354,9 +424,9 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
         // The simple replacements defined with expander.set(name, value) have
         // already be done at this point.
 
-        // We sort the md_replacements: we can directly apply the ones which
-        // are not applied to templates and we must defer the other ones.
-
+        // We triage the md_replacements: we can directly apply the ones which
+        // are not applied to sub templates and we must defer the other ones
+        // to the sub templates expansion phase
         let mut defered_repls: Vec<Vec<Replacement<'_, '_>>> = vec![Vec::new(); self.template.sub_templates.len()];
         for compound_arg in self.template.compound_args.iter().rev() {
             let line_idx = compound_arg.line_idx;
@@ -369,7 +439,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
                     } else {
                         let replacing_composite = Composite::from_inline(md_repl.value);
                         // we replace the compound with the ones of the parsed value
-                        let mut patched_line = &mut self.text.lines[line_idx];
+                        let patched_line = &mut self.text.lines[line_idx];
                         match patched_line {
                             Line::Normal(ref mut composite) => {
                                 replace_compound(composite, compound_arg.compound_idx, replacing_composite.compounds);
@@ -389,22 +459,21 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
             }
         }
 
-        // We'll apply the sub expansions, in reverse order of the sub-template
-        // This way we have no index to compute when inserting expansions
-        // (it would probably be faster to compute a lot of things in order not
-        // to do any insertions, but it's more code to write)
-        for (sub_idx, sub_template) in self.template.sub_templates.iter().enumerate().rev() {
-            // we remove the lines of the subtemplate from the main text
+        for (sub_idx, sub_template) in self.template.sub_templates.iter().enumerate() {
             let start = sub_template.start_line_idx;
             let end = start + sub_template.line_count;
-            let template_text = Text {
-                lines: self.text.lines.drain(start..end).collect(),
-            };
-            for sub_expansion in self.sub_expansions.iter().rev() {
+            // we remove the lines of the subtemplate from the main text
+            for idx in start..end {
+                self.lines_to_exclude[idx] = true;
+            }
+            for sub_expansion in self.sub_expansions.iter() {
                 if sub_expansion.name != sub_template.name {
                     continue;
                 }
-                let mut sub_text = template_text.clone();
+                let mut sub_text = Text::default();
+                for line in &self.text.lines[start..end] {
+                    sub_text.lines.push(line.clone());
+                }
                 for repl in &sub_expansion.raw_replacements {
                     set_in_text(
                         &self.template,
@@ -422,13 +491,23 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
                     sub_template.start_line_idx,
                     &md_replacements,
                 );
-                let mut insertion_idx = sub_template.start_line_idx;
                 for line in sub_text.lines.drain(..) {
-                    self.text.lines.insert(insertion_idx, line);
-                    insertion_idx += 1;
+                    self.lines_to_add[sub_template.start_line_idx].push(line);
                 }
             }
         }
-        self.text
+
+        // we now do the removals and insertions we deffered until then.
+        let mut lines = Vec::new();
+        for (idx, line) in self.text.lines.drain(..).enumerate() {
+            if !self.lines_to_exclude[idx] {
+                lines.push(line);
+            }
+            for line in self.lines_to_add[idx].drain(..) {
+                lines.push(line);
+            }
+        }
+        Text { lines }
     }
+
 }

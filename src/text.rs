@@ -2,7 +2,7 @@ use crate::line::Line;
 use crate::line_parser::LineParser;
 
 /// a text, that is just a collection of lines
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct Text<'a> {
     pub lines: Vec<Line<'a>>,
 }
