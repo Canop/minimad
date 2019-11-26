@@ -1,5 +1,9 @@
 
 
+pub fn is_blank(s: &str) -> bool {
+    s.chars().all(char::is_whitespace)
+}
+
 /// remove the superfluous lines and indentations you get when you insert
 ///  in your code a multi-line raw literal.
 pub fn lines(src: &str) -> Vec<&str> {
@@ -15,7 +19,7 @@ pub fn lines(src: &str) -> Vec<&str> {
         for line in src_lines {
             result_lines.push(line);
         }
-        if result_lines[result_lines.len()-1].chars().all(char::is_whitespace) {
+        if is_blank(result_lines[result_lines.len()-1]) {
             result_lines.truncate(result_lines.len()-1);
         }
         if result_lines.len() > 1 {
@@ -29,10 +33,10 @@ pub fn lines(src: &str) -> Vec<&str> {
             }
             if
                 !white_prefix.is_empty()
-                && result_lines.iter().all(|line| line.starts_with(&white_prefix))
+                && result_lines.iter().all(|line| line.starts_with(&white_prefix) || is_blank(line))
            {
-               result_lines = result_lines.iter().map(
-                   |line| &line[white_prefix.len()..]
+               result_lines = result_lines.iter().map(|line|
+                    if is_blank(line) { line } else { &line[white_prefix.len()..] }
                ).collect();
            }
         }
