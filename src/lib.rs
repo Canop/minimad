@@ -49,7 +49,7 @@ pub use {
     line::MAX_HEADER_DEPTH,
     tbl::{TableRow, TableRule},
     inline_template::InlineTemplate,
-    text_template::TextTemplate,
+    text_template::{SubTemplateExpander, TextTemplate, TextTemplateExpander},
     text::Text,
 };
 

@@ -48,6 +48,8 @@ struct Replacement<'s, 'b> {
     value: &'s str,
 }
 
+/// an expander for a sub template. You get it using the `sub` method
+/// of the text expander
 #[derive(Debug)]
 pub struct SubTemplateExpander<'s, 'b> {
     name: &'b str,
@@ -55,6 +57,8 @@ pub struct SubTemplateExpander<'s, 'b> {
     md_replacements: Vec<Replacement<'s, 'b>>,
 }
 
+/// an expander you get from a template. You specify replacements
+/// on the expander then you ask it the text using `expand`
 pub struct TextTemplateExpander<'s, 'b> {
     template: &'b TextTemplate<'s>,
     text: Text<'s>,
@@ -196,6 +200,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
 
 impl<'s> TextTemplate<'s> {
 
+    /// return a new expander for the template
     pub fn expander<'b>(&'b self) -> TextTemplateExpander<'s, 'b> {
         TextTemplateExpander::from(self)
     }
@@ -419,6 +424,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
         &mut self.sub_expansions[idx]
     }
 
+    /// build a text by applying the replacements to the initial template
     pub fn expand(mut self) -> Text<'s> {
 
         // The simple replacements defined with expander.set(name, value) have

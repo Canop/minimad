@@ -1,5 +1,11 @@
 use crate::Composite;
 
+// There's an ergonomics limit here: https://stackoverflow.com/q/59306592/263525
+// It could probably be solved by defining 10 functions, each one with a different number of
+// arguments, and a global macro doing the routing. I won't try this until there's enough
+// users of termimad to justify it...
+//
+
 #[derive(Debug, Default, PartialEq, Eq)]
 struct Arg {
     compounds_idx: Vec<usize>, // indexes of the compounds the arg should fill
@@ -86,6 +92,7 @@ impl<'a> InlineTemplate<'a> {
 /// static)
 /// * arguments can be omited, repeated, or given in arbitrary order
 /// * no support for fmt parameters or arguments other than `&str`
+///
 #[macro_export]
 macro_rules! mad_inline {
     ( $md: literal $(, $value: expr )* $(,)? ) => {{
