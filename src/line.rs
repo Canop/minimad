@@ -12,6 +12,7 @@ pub enum Line<'a> {
     TableRow(TableRow<'a>), // a normal table row, with cells having content
     TableRule(TableRule),   // a separator/border in a table, optionally defining alignments
     HorizontalRule,         // an horizontal line dividing the screen
+    CodeFence,
 }
 
 impl Line<'_> {

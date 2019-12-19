@@ -211,15 +211,22 @@ impl<'s> LineParser<'s> {
         }
         cells
     }
-    pub fn inline(&mut self) -> Composite<'s> {
-        assert_eq!(self.idx, 0, "A LineParser can only be consumed once");
+    pub fn inline(mut self) -> Composite<'s> {
         Composite {
             style: CompositeStyle::Paragraph,
             compounds: self.parse_compounds(false),
         }
     }
-    pub fn line(&mut self) -> Line<'s> {
-        assert_eq!(self.idx, 0, "A LineParser can only be consumed once");
+    /// should be called when the line must be interpreted as a code part,
+    /// for example between code fences
+    pub fn as_code(mut self) -> Line<'s> {
+        if self.src == "```" {
+            Line::CodeFence
+        } else {
+            Line::new_code(self.code_compound_from_idx(0))
+        }
+    }
+    pub fn line(mut self) -> Line<'s> {
         if self.src.starts_with('|') {
             let tr = TableRow {
                 cells: self.parse_cells(),
@@ -242,6 +249,9 @@ impl<'s> LineParser<'s> {
         if self.src.starts_with("> ") {
             self.idx = 2;
             return Line::new_quote(self.parse_compounds(false));
+        }
+        if self.src == "```" {
+            return Line::CodeFence;
         }
         let header_level = header_level(self.src);
         if header_level > 0 {
@@ -384,6 +394,14 @@ mod tests {
                 Compound::raw_str("striked").strikeout(),
                 Compound::raw_str("I").italic(),
             ])
+        );
+    }
+
+    #[test]
+    fn code_fence() {
+        assert_eq!(
+            Line::from("```"),
+            Line::CodeFence,
         );
     }
 
