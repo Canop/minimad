@@ -152,6 +152,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
         let mut compound_args = Vec::new();
         let mut sub_templates = Vec::new();
         let mut current_sub_template: Option<SubTemplate<'_>> = None;
+        let mut between_fences = false;
         for md_line in clean::lines(md) {
             match read_sub_template_token(md_line) {
                 SubTemplateToken::Start(name) => {
@@ -174,20 +175,31 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
                 }
                 SubTemplateToken::None => { }
             }
-            let mut line = LineParser::from(md_line).line();
             let line_idx = text.lines.len();
+            let parser = LineParser::from(md_line);
+            let mut line = if between_fences {
+                parser.as_code()
+            } else {
+                parser.line()
+            };
             match &mut line {
                 Line::Normal(ref mut composite) => {
                     find_args(composite, &mut compound_args, line_idx, 0);
+                    text.lines.push(line);
                 }
                 Line::TableRow(ref mut table_row) => {
                     for (composite_idx, composite) in table_row.cells.iter_mut().enumerate() {
                         find_args(composite, &mut compound_args, line_idx, composite_idx);
                     }
+                    text.lines.push(line);
                 }
-                _ => {},
+                Line::CodeFence => {
+                    between_fences = !between_fences;
+                }
+                _ => {
+                    text.lines.push(line);
+                },
             };
-            text.lines.push(line);
         }
         TextTemplate{
             text,
@@ -379,6 +391,8 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
         self
     }
 
+    /// replace a placeholder with several lines.
+    /// This is mostly useful when the placeholder is a repeatable line (code, list item)
     pub fn set_lines(&mut self, name: &'b str, raw_lines: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
         for compound_arg in &self.template.compound_args {
             if compound_arg.name == name {
@@ -398,6 +412,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
         self
     }
 
+    /// replace a placeholder with several lines interpreted as markdown
     pub fn set_lines_md(&mut self, name: &'b str, md: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
         for compound_arg in &self.template.compound_args {
             if compound_arg.name == name {

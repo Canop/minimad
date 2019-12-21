@@ -219,7 +219,7 @@ impl<'s> LineParser<'s> {
     }
     /// should be called when the line must be interpreted as a code part,
     /// for example between code fences
-    pub fn as_code(mut self) -> Line<'s> {
+    pub fn as_code(self) -> Line<'s> {
         if self.src == "```" {
             Line::CodeFence
         } else {
