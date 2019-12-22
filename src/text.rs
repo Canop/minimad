@@ -19,7 +19,7 @@ impl<'s> From<&'s str> for Text<'s> {
                 parser.line()
             };
             match line {
-                Line::CodeFence => {
+                Line::CodeFence(..) => {
                     between_fences = !between_fences;
                 }
                 _ => {

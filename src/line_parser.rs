@@ -219,9 +219,10 @@ impl<'s> LineParser<'s> {
     }
     /// should be called when the line must be interpreted as a code part,
     /// for example between code fences
-    pub fn as_code(self) -> Line<'s> {
-        if self.src == "```" {
-            Line::CodeFence
+    pub fn as_code(mut self) -> Line<'s> {
+        if self.src.starts_with("```") {
+            self.idx = 3;
+            Line::new_code_fence(self.parse_compounds(false))
         } else {
             Line::new_code(self.code_compound_from_idx(0))
         }
@@ -250,8 +251,9 @@ impl<'s> LineParser<'s> {
             self.idx = 2;
             return Line::new_quote(self.parse_compounds(false));
         }
-        if self.src == "```" {
-            return Line::CodeFence;
+        if self.src.starts_with("```") {
+            self.idx = 3;
+            return Line::new_code_fence(self.parse_compounds(false));
         }
         let header_level = header_level(self.src);
         if header_level > 0 {
@@ -401,7 +403,13 @@ mod tests {
     fn code_fence() {
         assert_eq!(
             Line::from("```"),
-            Line::CodeFence,
+            Line::new_code_fence(vec![]),
+        );
+        assert_eq!(
+            Line::from("```rust"),
+            Line::new_code_fence(vec![
+                Compound::raw_str("rust"),
+            ]),
         );
     }
 

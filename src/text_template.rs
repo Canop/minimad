@@ -193,7 +193,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
                     }
                     text.lines.push(line);
                 }
-                Line::CodeFence => {
+                Line::CodeFence(..) => {
                     between_fences = !between_fences;
                 }
                 _ => {

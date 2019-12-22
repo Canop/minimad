@@ -12,7 +12,7 @@ pub enum Line<'a> {
     TableRow(TableRow<'a>), // a normal table row, with cells having content
     TableRule(TableRule),   // a separator/border in a table, optionally defining alignments
     HorizontalRule,         // an horizontal line dividing the screen
-    CodeFence,
+    CodeFence(Composite<'a>),
 }
 
 impl Line<'_> {
@@ -29,6 +29,18 @@ impl Line<'_> {
     }
     pub fn new_paragraph(compounds: Vec<Compound<'_>>) -> Line<'_> {
         Line::Normal(Composite {
+            style: CompositeStyle::Paragraph,
+            compounds,
+        })
+    }
+    pub fn empty_code_fence() -> Line<'static> {
+        Line::CodeFence(Composite {
+            style: CompositeStyle::Paragraph,
+            compounds: vec![],
+        })
+    }
+    pub fn new_code_fence(compounds: Vec<Compound<'_>>) -> Line<'_> {
+        Line::CodeFence(Composite {
             style: CompositeStyle::Paragraph,
             compounds,
         })
