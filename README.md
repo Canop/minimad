@@ -46,14 +46,14 @@ assert_eq!(
 assert_eq!(
     Line::from("Hello ~~wolrd~~ **World**. *Code*: `sqrt(π/2)`"),
     Line::new_paragraph(vec![
-	Compound::raw_str("Hello "),
-	Compound::raw_str("wolrd").strikeout(),
-	Compound::raw_str(" "),
-	Compound::raw_str("World").bold(),
-	Compound::raw_str(". "),
-	Compound::raw_str("Code").italic(),
-	Compound::raw_str(": "),
-	Compound::raw_str("sqrt(π/2)").code(),
+        Compound::raw_str("Hello "),
+        Compound::raw_str("wolrd").strikeout(),
+        Compound::raw_str(" "),
+        Compound::raw_str("World").bold(),
+        Compound::raw_str(". "),
+        Compound::raw_str("Code").italic(),
+        Compound::raw_str(": "),
+        Compound::raw_str("sqrt(π/2)").code(),
     ])
 );
 ```

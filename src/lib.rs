@@ -32,7 +32,7 @@ assert_eq!(
 ```
 */
 
-mod clean;
+pub mod clean;
 mod composite;
 mod compound;
 mod line;
