@@ -17,7 +17,7 @@ impl Default for Alignment {
 
 /// a Compound is a part of a line with a consistent styling.
 /// It can be part of word, several words, some inline code, or even the whole line.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Compound<'s> {
     pub src: &'s str,
     pub bold: bool,
@@ -233,15 +233,4 @@ impl fmt::Debug for Compound<'_> {
         Ok(())
     }
 }
-
-impl PartialEq for Compound<'_> {
-    fn eq(&self, other: &Compound<'_>) -> bool {
-        self.as_str() == other.as_str()
-            && self.bold == other.bold
-            && self.italic == other.italic
-            && self.code == other.code
-            && self.strikeout == other.strikeout
-    }
-}
-impl Eq for Compound<'_> {}
 

@@ -10,6 +10,7 @@ use crate::Composite;
 struct Arg {
     compounds_idx: Vec<usize>, // indexes of the compounds the arg should fill
 }
+#[allow(dead_code)] // this isn't really dead code, it depends on the macro used
 impl Arg {
     fn add(&mut self, idx: usize) {
         self.compounds_idx.push(idx);
