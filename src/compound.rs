@@ -74,7 +74,7 @@ impl<'s> Compound<'s> {
                 break;
             }
         }
-        if rb_end == 0 && rb_end != 0 {
+        if rb_end == 0 && rb_start != 0 {
             self.tail(rb_start)
         } else {
             self.sub(rb_start, rb_end)

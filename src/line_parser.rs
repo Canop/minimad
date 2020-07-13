@@ -247,6 +247,9 @@ impl<'s> LineParser<'s> {
             self.idx = 2;
             return Line::new_list_item(self.parse_compounds(false));
         }
+        if self.src == ">" {
+            return Line::new_quote(Vec::new());
+        }
         if self.src.starts_with("> ") {
             self.idx = 2;
             return Line::new_quote(self.parse_compounds(false));

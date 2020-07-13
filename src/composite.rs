@@ -87,7 +87,7 @@ impl<'a> Composite<'a> {
     /// Empty compounds are cleaned out
     pub fn trim_start_spaces(&mut self) {
         loop {
-            if self.compounds.len() == 0 {
+            if self.compounds.is_empty() {
                 break;
             }
             if self.compounds[0].code {
@@ -105,7 +105,7 @@ impl<'a> Composite<'a> {
     /// Empty compounds are cleaned out
     pub fn trim_end_spaces(&mut self) {
         loop {
-            if self.compounds.len() == 0 {
+            if self.compounds.is_empty() {
                 break;
             }
             let last = self.compounds.len() - 1;
