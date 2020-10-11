@@ -287,7 +287,7 @@ fn compounds_are_rule(compounds: &[Compound<'_>]) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 
 /// Tests of line parsing
@@ -404,15 +404,10 @@ mod tests {
 
     #[test]
     fn code_fence() {
-        assert_eq!(
-            Line::from("```"),
-            Line::new_code_fence(vec![]),
-        );
+        assert_eq!(Line::from("```"), Line::new_code_fence(vec![]),);
         assert_eq!(
             Line::from("```rust"),
-            Line::new_code_fence(vec![
-                Compound::raw_str("rust"),
-            ]),
+            Line::new_code_fence(vec![Compound::raw_str("rust"),]),
         );
     }
 

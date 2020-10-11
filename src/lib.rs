@@ -35,24 +35,27 @@ assert_eq!(
 pub mod clean;
 mod composite;
 mod compound;
+mod inline_template;
 mod line;
 mod line_parser;
+mod owning_template_expander;
 mod tbl;
-mod inline_template;
-mod text_template;
 mod text;
+mod text_template;
 
 pub use {
     composite::{Composite, CompositeStyle},
     compound::{Alignment, Compound},
+    inline_template::InlineTemplate,
     line::Line,
     line::MAX_HEADER_DEPTH,
+    owning_template_expander::OwningTemplateExpander,
     tbl::{TableRow, TableRule},
-    inline_template::InlineTemplate,
-    text_template::{SubTemplateExpander, TextTemplate, TextTemplateExpander},
     text::Text,
+    text_template::{SubTemplateExpander, TextTemplate, TextTemplateExpander},
 };
 
+#[allow(unused_imports)]
 #[macro_use]
 extern crate lazy_static;
 

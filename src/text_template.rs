@@ -1,10 +1,5 @@
-
 use crate::{
-    clean,
-    composite::Composite,
-    compound::Compound,
-    line::Line,
-    line_parser::LineParser,
+    clean, composite::Composite, compound::Compound, line::Line, line_parser::LineParser,
     text::Text,
 };
 
@@ -18,22 +13,20 @@ struct SubTemplate<'s> {
 #[derive(Debug, Default, PartialEq, Eq)]
 struct CompoundArg<'s> {
     name: &'s str,
-    line_idx: usize, // index in the line in the template's text
+    line_idx: usize,      // index in the line in the template's text
     composite_idx: usize, // for when the line is multi-composite (ie it's a tablerow)
-    compound_idx: usize, // index of the compound in the line's composite
+    compound_idx: usize,  // index of the compound in the line's composite
 }
-
 
 /// a markdown template allowing you to replace some placeholders with
 /// given values, or to expand some sub-templates with repetitions
 /// (useful with lists, table rows, etc.)
 #[derive(Debug)]
 pub struct TextTemplate<'s> {
-    text: Text<'s>,
+    pub text: Text<'s>,
     compound_args: Vec<CompoundArg<'s>>, // replacements of compounds
     sub_templates: Vec<SubTemplate<'s>>,
 }
-
 
 #[derive(Debug)]
 enum SubTemplateToken<'s> {
@@ -79,7 +72,8 @@ fn is_valid_name_char(c: char) -> bool {
 fn read_sub_template_token(md_line: &str) -> SubTemplateToken<'_> {
     let mut chars = md_line.chars();
     match (chars.next(), chars.next()) {
-        (Some('$'), Some('{')) => { // "${" : maybe a sub-template opening
+        (Some('$'), Some('{')) => {
+            // "${" : maybe a sub-template opening
             let name = &md_line[2..];
             if !name.is_empty() && name.chars().all(is_valid_name_char) {
                 SubTemplateToken::Start(name)
@@ -87,10 +81,8 @@ fn read_sub_template_token(md_line: &str) -> SubTemplateToken<'_> {
                 SubTemplateToken::None
             }
         }
-        (Some('}'), None) => {
-            SubTemplateToken::End
-        }
-        _ => SubTemplateToken::None
+        (Some('}'), None) => SubTemplateToken::End,
+        _ => SubTemplateToken::None,
     }
 }
 
@@ -112,12 +104,12 @@ fn find_args<'s>(
                     if c == '{' {
                         while let Some((idx, c)) = iter.next() {
                             if c == '}' {
-                                if idx-bridx > 1 {
+                                if idx - bridx > 1 {
                                     if start + 1 < bridx {
                                         compounds.push(compound.sub(start, bridx - 1));
                                     }
-                                    args.push(CompoundArg{
-                                        name: &compound.as_str()[bridx+1.. idx],
+                                    args.push(CompoundArg {
+                                        name: &compound.as_str()[bridx + 1..idx],
                                         line_idx,
                                         composite_idx,
                                         compound_idx: compounds.len(),
@@ -146,9 +138,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
     /// build a template from a markdown text with placeholders like ${some-name}
     /// and sub-templates
     fn from(md: &'s str) -> TextTemplate<'s> {
-        let mut text = Text {
-            lines: Vec::new(),
-        };
+        let mut text = Text { lines: Vec::new() };
         let mut compound_args = Vec::new();
         let mut sub_templates = Vec::new();
         let mut current_sub_template: Option<SubTemplate<'_>> = None;
@@ -156,7 +146,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
         for md_line in clean::lines(md) {
             match read_sub_template_token(md_line) {
                 SubTemplateToken::Start(name) => {
-                    current_sub_template = Some(SubTemplate{
+                    current_sub_template = Some(SubTemplate {
                         start_line_idx: text.lines.len(),
                         line_count: 0,
                         name,
@@ -173,7 +163,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
                         // we'll assume this `}` isn't part of any templating
                     }
                 }
-                SubTemplateToken::None => { }
+                SubTemplateToken::None => {}
             }
             let line_idx = text.lines.len();
             let parser = LineParser::from(md_line);
@@ -198,20 +188,18 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
                 }
                 _ => {
                     text.lines.push(line);
-                },
+                }
             };
         }
-        TextTemplate{
+        TextTemplate {
             text,
             compound_args,
             sub_templates,
         }
     }
-
 }
 
 impl<'s> TextTemplate<'s> {
-
     /// return a new expander for the template
     pub fn expander<'b>(&'b self) -> TextTemplateExpander<'s, 'b> {
         TextTemplateExpander::from(self)
@@ -225,8 +213,7 @@ impl<'s> TextTemplate<'s> {
     /// storage)
     fn get_sub_of_line(&self, line_idx: usize) -> Option<usize> {
         for (sub_idx, sub_template) in self.sub_templates.iter().enumerate() {
-            if
-                line_idx >= sub_template.start_line_idx
+            if line_idx >= sub_template.start_line_idx
                 && line_idx < sub_template.start_line_idx + sub_template.line_count
             {
                 return Some(sub_idx);
@@ -239,7 +226,6 @@ impl<'s> TextTemplate<'s> {
 //-------------------------------------------------------------------
 //                          Expansion
 //-------------------------------------------------------------------
-
 
 impl<'s, 'b> From<&'b TextTemplate<'s>> for TextTemplateExpander<'s, 'b> {
     /// Build a new expander for the template. The expander stores the additions
@@ -276,22 +262,18 @@ impl<'s, 'b> SubTemplateExpander<'s, 'b> {
     }
 }
 
-fn set_in_line<'s>(
-    line: &mut Line<'s>,
-    compound_arg: &CompoundArg<'s>,
-    value: &'s str,
-) {
+fn set_in_line<'s>(line: &mut Line<'s>, compound_arg: &CompoundArg<'s>, value: &'s str) {
     match line {
         Line::Normal(composite) => {
             composite.compounds[compound_arg.compound_idx].set_str(value);
         }
         Line::TableRow(table_row) => {
-            table_row.cells[compound_arg.composite_idx].compounds[compound_arg.compound_idx].set_str(value);
+            table_row.cells[compound_arg.composite_idx].compounds[compound_arg.compound_idx]
+                .set_str(value);
         }
-        _ => {},
+        _ => {}
     }
 }
-
 
 fn set_in_text<'s>(
     template: &TextTemplate<'s>,
@@ -306,11 +288,7 @@ fn set_in_text<'s>(
             if idx < line_offset || idx - line_offset >= text.lines.len() {
                 continue; // can happen if a replacement name is present in the outside text
             }
-            set_in_line(
-                &mut text.lines[idx - line_offset],
-                compound_arg,
-                value,
-            );
+            set_in_line(&mut text.lines[idx - line_offset], compound_arg, value);
         }
     }
 }
@@ -336,7 +314,11 @@ fn set_all_md_in_text<'s, 'b>(
                 let patched_line = &mut text.lines[idx - line_offset];
                 match patched_line {
                     Line::Normal(ref mut composite) => {
-                        replace_compound(composite, compound_arg.compound_idx, replacing_composite.compounds);
+                        replace_compound(
+                            composite,
+                            compound_arg.compound_idx,
+                            replacing_composite.compounds,
+                        );
                     }
                     Line::TableRow(ref mut table_row) => {
                         replace_compound(
@@ -345,7 +327,7 @@ fn set_all_md_in_text<'s, 'b>(
                             replacing_composite.compounds,
                         );
                     }
-                    _ => {},
+                    _ => {}
                 }
                 break; // it's not possible to apply two replacements to the compound
             }
@@ -357,7 +339,7 @@ fn set_all_md_in_text<'s, 'b>(
 /// Do nothing if the passed compounds vec is empty.
 fn replace_compound<'s>(
     composite: &mut Composite<'s>, // composite in which to do the replacement
-    mut compound_idx: usize,   // index in the composite of the compound to remove
+    mut compound_idx: usize,       // index in the composite of the compound to remove
     mut replacing_compounds: Vec<Compound<'s>>, // the compounds taking the place of the removed one
 ) {
     let mut replacing_compounds = replacing_compounds.drain(..);
@@ -371,17 +353,10 @@ fn replace_compound<'s>(
 }
 
 impl<'s, 'b> TextTemplateExpander<'s, 'b> {
-
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
     pub fn set(&mut self, name: &str, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
-        set_in_text(
-            &self.template,
-            &mut self.text,
-            0,
-            name,
-            value,
-        );
+        set_in_text(&self.template, &mut self.text, 0, name, value);
         self
     }
 
@@ -393,18 +368,18 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
 
     /// replace a placeholder with several lines.
     /// This is mostly useful when the placeholder is a repeatable line (code, list item)
-    pub fn set_lines(&mut self, name: &'b str, raw_lines: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+    pub fn set_lines(
+        &mut self,
+        name: &'b str,
+        raw_lines: &'s str,
+    ) -> &mut TextTemplateExpander<'s, 'b> {
         for compound_arg in &self.template.compound_args {
             if compound_arg.name == name {
                 // the line holding the compound is now considered a template, it's removed
                 self.lines_to_exclude[compound_arg.line_idx] = true;
                 for value in clean::lines(raw_lines) {
                     let mut line = self.text.lines[compound_arg.line_idx].clone();
-                    set_in_line(
-                        &mut line,
-                        compound_arg,
-                        value,
-                    );
+                    set_in_line(&mut line, compound_arg, value);
                     self.lines_to_add[compound_arg.line_idx].push(line);
                 }
             }
@@ -413,7 +388,11 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
     }
 
     /// replace a placeholder with several lines interpreted as markdown
-    pub fn set_lines_md(&mut self, name: &'b str, md: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+    pub fn set_lines_md(
+        &mut self,
+        name: &'b str,
+        md: &'s str,
+    ) -> &mut TextTemplateExpander<'s, 'b> {
         for compound_arg in &self.template.compound_args {
             if compound_arg.name == name {
                 // the line holding the compound is now considered a template, it's removed
@@ -441,14 +420,14 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
 
     /// build a text by applying the replacements to the initial template
     pub fn expand(mut self) -> Text<'s> {
-
         // The simple replacements defined with expander.set(name, value) have
         // already be done at this point.
 
         // We triage the md_replacements: we can directly apply the ones which
         // are not applied to sub templates and we must defer the other ones
         // to the sub templates expansion phase
-        let mut defered_repls: Vec<Vec<Replacement<'_, '_>>> = vec![Vec::new(); self.template.sub_templates.len()];
+        let mut defered_repls: Vec<Vec<Replacement<'_, '_>>> =
+            vec![Vec::new(); self.template.sub_templates.len()];
         for compound_arg in self.template.compound_args.iter().rev() {
             let line_idx = compound_arg.line_idx;
             let sub_idx = self.template.get_sub_of_line(line_idx);
@@ -463,7 +442,11 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
                         let patched_line = &mut self.text.lines[line_idx];
                         match patched_line {
                             Line::Normal(ref mut composite) => {
-                                replace_compound(composite, compound_arg.compound_idx, replacing_composite.compounds);
+                                replace_compound(
+                                    composite,
+                                    compound_arg.compound_idx,
+                                    replacing_composite.compounds,
+                                );
                             }
                             Line::TableRow(ref mut table_row) => {
                                 replace_compound(
@@ -472,7 +455,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
                                     replacing_composite.compounds,
                                 );
                             }
-                            _ => {},
+                            _ => {}
                         }
                         break; // it's not possible to apply two replacements to the compound
                     }
@@ -530,5 +513,4 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
         }
         Text { lines }
     }
-
 }
