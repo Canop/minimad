@@ -100,6 +100,8 @@ macro_rules! mad_inline {
         lazy_static! {
             static ref TEMPLATE: minimad::InlineTemplate<'static> = minimad::InlineTemplate::from($md);
         }
+        #[allow(unused_mut)]
+        #[allow(unused_variables)]
         let mut arg_idx = 0;
         let mut composite = TEMPLATE.raw_composite();
         $(

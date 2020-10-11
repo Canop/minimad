@@ -1,5 +1,3 @@
-
-
 pub fn is_blank(s: &str) -> bool {
     s.chars().all(char::is_whitespace)
 }
@@ -19,8 +17,8 @@ pub fn lines(src: &str) -> Vec<&str> {
         for line in src_lines {
             result_lines.push(line);
         }
-        if is_blank(result_lines[result_lines.len()-1]) {
-            result_lines.truncate(result_lines.len()-1);
+        if is_blank(result_lines[result_lines.len() - 1]) {
+            result_lines.truncate(result_lines.len() - 1);
         }
         if result_lines.len() > 1 {
             let mut white_prefix = String::new();
@@ -31,14 +29,22 @@ pub fn lines(src: &str) -> Vec<&str> {
                     break;
                 }
             }
-            if
-                !white_prefix.is_empty()
-                && result_lines.iter().all(|line| line.starts_with(&white_prefix) || is_blank(line))
-           {
-               result_lines = result_lines.iter().map(|line|
-                    if is_blank(line) { line } else { &line[white_prefix.len()..] }
-               ).collect();
-           }
+            if !white_prefix.is_empty()
+                && result_lines
+                    .iter()
+                    .all(|line| line.starts_with(&white_prefix) || is_blank(line))
+            {
+                result_lines = result_lines
+                    .iter()
+                    .map(|line| {
+                        if is_blank(line) {
+                            line
+                        } else {
+                            &line[white_prefix.len()..]
+                        }
+                    })
+                    .collect();
+            }
         }
     }
     result_lines
@@ -46,11 +52,13 @@ pub fn lines(src: &str) -> Vec<&str> {
 
 #[test]
 fn test_lines_cleaning() {
-    let lines = lines(r#"
+    let lines = lines(
+        r#"
         test
             hop
         hip
-    "#);
+    "#,
+    );
     assert_eq!(lines.len(), 3);
     assert_eq!(lines[0], "test");
     assert_eq!(lines[1], "    hop");

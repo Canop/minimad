@@ -32,7 +32,7 @@ impl<'s> Compound<'s> {
     #[inline(always)]
     pub fn raw_str(src: &'s str) -> Compound<'s> {
         Compound {
-            src: src,
+            src,
             bold: false,
             italic: false,
             code: false,
@@ -233,4 +233,3 @@ impl fmt::Debug for Compound<'_> {
         Ok(())
     }
 }
-

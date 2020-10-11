@@ -1,7 +1,4 @@
-use crate::{
-    line::Line,
-    line_parser::LineParser,
-};
+use crate::{line::Line, line_parser::LineParser};
 
 /// a text, that is just a collection of lines
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
@@ -32,7 +29,8 @@ impl<'s> Text<'s> {
     /// let text = Text::from_md_lines(md.into_iter());
     /// ```
     pub fn from_md_lines<I>(md_lines: I) -> Self
-    where I: Iterator<Item=&'s str>
+    where
+        I: Iterator<Item = &'s str>,
     {
         let mut lines = Vec::new();
         let mut between_fences = false;
@@ -59,29 +57,28 @@ impl<'s> Text<'s> {
 /// Tests of text parsing
 #[cfg(test)]
 mod tests {
-    use crate::{
-        compound::*,
-        text::Text,
-        line::*,
-        clean,
-    };
+    use crate::{clean, compound::*, line::*, text::Text};
 
     #[test]
     fn indented_code_between_fences() {
-        let md = clean::lines(r#"
+        let md = clean::lines(
+            r#"
             outside
             ```code
             a
                 b
             ```
-        "#);
+        "#,
+        );
         assert_eq!(
             Text::from_md_lines(md.into_iter()),
-            Text{ lines: vec![
-                Line::new_paragraph(vec![Compound::raw_str("outside")]),
-                Line::new_code(Compound::raw_str("a").code()),
-                Line::new_code(Compound::raw_str("    b").code()),
-            ]},
+            Text {
+                lines: vec![
+                    Line::new_paragraph(vec![Compound::raw_str("outside")]),
+                    Line::new_code(Compound::raw_str("a").code()),
+                    Line::new_code(Compound::raw_str("    b").code()),
+                ]
+            },
         );
     }
 }
