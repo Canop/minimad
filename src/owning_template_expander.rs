@@ -5,8 +5,10 @@ use super::*;
 /// you produce the text to display.
 /// Additionnaly, the same expander can be used for several
 /// templates.
+#[derive(Default)]
 pub struct OwningTemplateExpander<'s> {
     ops: Vec<FillingOperation<'s>>,
+    default_value: Option<String>,
 }
 pub struct OwningSubTemplateExpander<'s> {
     ops: Vec<SubFillingOperation<'s>>,
@@ -41,8 +43,16 @@ enum SubFillingOperation<'s> {
 
 impl<'s> OwningTemplateExpander<'s> {
     pub fn new() -> Self {
-        let ops = Vec::new();
-        Self { ops }
+        Self::default()
+    }
+
+    /// set a default value to use when no replacement was defined.
+    /// When you don't call this method, the expanded text contains the
+    /// original names like `${my_arg_name}` (which is useful when developing
+    /// your filling code)
+    pub fn set_default<S: Into<String>>(&mut self, value: S) -> &mut Self {
+        self.default_value = Some(value.into());
+        self
     }
 
     /// replace placeholders with name `name` with the given value, non interpreted
@@ -103,6 +113,9 @@ impl<'s> OwningTemplateExpander<'s> {
     /// build a text by applying the replacements to the initial template
     pub fn expand<'t>(&'s self, template: &'t TextTemplate<'s>) -> Text<'s> {
         let mut expander = template.expander();
+        if let Some(s) = &self.default_value {
+            expander.set_all(s);
+        }
         for op in &self.ops {
             match op {
                 FillingOperation::Set { name, value } => {

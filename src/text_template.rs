@@ -279,11 +279,11 @@ fn set_in_text<'s>(
     template: &TextTemplate<'s>,
     text: &mut Text<'s>,
     line_offset: usize,
-    name: &str,
+    name: Option<&str>,
     value: &'s str,
 ) {
     for compound_arg in &template.compound_args {
-        if name == compound_arg.name {
+        if name.is_none () || name == Some(compound_arg.name) {
             let idx = compound_arg.line_idx;
             if idx < line_offset || idx - line_offset >= text.lines.len() {
                 continue; // can happen if a replacement name is present in the outside text
@@ -356,7 +356,15 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
     pub fn set(&mut self, name: &str, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
-        set_in_text(&self.template, &mut self.text, 0, name, value);
+        set_in_text(&self.template, &mut self.text, 0, Some(name), value);
+        self
+    }
+
+    /// replace all placeholders with the given value, non interpreted
+    /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template).
+    /// This can be used at start to have a "default" value.
+    pub fn set_all(&mut self, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+        set_in_text(&self.template, &mut self.text, 0, None, value);
         self
     }
 
@@ -483,7 +491,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
                         &self.template,
                         &mut sub_text,
                         sub_template.start_line_idx,
-                        repl.name,
+                        Some(repl.name),
                         repl.value,
                     );
                 }
