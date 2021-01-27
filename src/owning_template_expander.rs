@@ -57,10 +57,10 @@ impl<'s> OwningTemplateExpander<'s> {
 
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
-    pub fn set<S: Into<String>>(&mut self, name: &'s str, value: S) -> &mut Self {
+    pub fn set<S: std::fmt::Display>(&mut self, name: &'s str, value: S) -> &mut Self {
         self.ops.push(FillingOperation::Set {
             name,
-            value: value.into(),
+            value: value.to_string(),
         });
         self
     }
@@ -155,10 +155,10 @@ impl<'s> OwningSubTemplateExpander<'s> {
     }
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
-    pub fn set<S: Into<String>>(&mut self, name: &'s str, value: S) -> &mut Self {
+    pub fn set<S: std::fmt::Display>(&mut self, name: &'s str, value: S) -> &mut Self {
         self.ops.push(SubFillingOperation::Set {
             name,
-            value: value.into(),
+            value: value.to_string(),
         });
         self
     }
