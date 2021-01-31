@@ -66,7 +66,7 @@ pub struct TextTemplateExpander<'s, 'b> {
 //-------------------------------------------------------------------
 
 fn is_valid_name_char(c: char) -> bool {
-    c.is_ascii_lowercase() || c == '_' || c == '-'
+    c.is_ascii_lowercase() || c.is_digit(10) || c == '_' || c == '-'
 }
 
 fn read_sub_template_token(md_line: &str) -> SubTemplateToken<'_> {
