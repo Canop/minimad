@@ -103,10 +103,12 @@ macro_rules! mad_inline {
         #[allow(unused_mut)]
         #[allow(unused_variables)]
         let mut arg_idx = 0;
+        #[allow(unused_mut)]
         let mut composite = TEMPLATE.raw_composite();
         $(
             TEMPLATE.apply(&mut composite, arg_idx, $value);
-            arg_idx += 1;
+            #[allow(unused_assignments)] // rustc bug
+            { arg_idx += 1; }
         )*
         composite
     }};

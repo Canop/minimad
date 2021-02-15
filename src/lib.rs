@@ -35,6 +35,7 @@ assert_eq!(
 pub mod clean;
 mod composite;
 mod compound;
+mod header;
 mod inline_template;
 mod line;
 mod line_parser;
@@ -46,6 +47,7 @@ mod text_template;
 pub use {
     composite::{Composite, CompositeStyle},
     compound::{Alignment, Compound},
+    header::header_level,
     inline_template::InlineTemplate,
     line::Line,
     line::MAX_HEADER_DEPTH,

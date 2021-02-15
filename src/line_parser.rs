@@ -1,48 +1,6 @@
-use crate::composite::{Composite, CompositeStyle};
-use crate::compound::Compound;
-use crate::line::*;
-use crate::tbl::TableRow;
-use std::cmp;
-
-/// count the number of '#' at start. Return 0 if they're
-/// not followed by a ' ' or if they're too many
-fn header_level(src: &str) -> usize {
-    let src = src.as_bytes();
-    let mut l: usize = src.len();
-    if l > 2 {
-        l = cmp::min(src.len() - 1, MAX_HEADER_DEPTH + 1);
-        for i in 0..l {
-            match src[i] {
-                b'#' => {}
-                b' ' => {
-                    return i;
-                }
-                _ => {
-                    return 0;
-                }
-            }
-        }
-    }
-    0
-}
-
-#[test]
-fn header_level_count() {
-    assert_eq!(header_level(""), 0);
-    assert_eq!(header_level("#"), 0);
-    assert_eq!(header_level("# "), 0); // we don't allow empty headers
-    assert_eq!(header_level("# A"), 1);
-    assert_eq!(header_level(" "), 0);
-    assert_eq!(header_level("test"), 0);
-    assert_eq!(header_level("###b"), 0);
-    assert_eq!(header_level("###"), 0);
-    assert_eq!(header_level("### b"), 3);
-    assert_eq!(header_level(" a b"), 0);
-    assert_eq!(header_level("# titre"), 1);
-    assert_eq!(header_level("#### *titre*"), 4);
-    assert_eq!(header_level("######## a b"), 8);
-    assert_eq!(header_level("######### a b"), 0); // too deep
-}
+use {
+    crate::*,
+};
 
 /// The structure parsing a line or part of a line.
 /// A LineParser initialized from a markdown string exposes 2 main methods:
@@ -96,6 +54,8 @@ impl<'s> LineParser<'s> {
         let mut compounds = Vec::new();
         let mut after_first_star = false;
         let mut after_first_tilde = false;
+        let mut after_antislash = false;
+
         for (idx, char) in self.src.char_indices().skip(self.idx) {
             if self.code {
                 // only one thing matters: whether we're closing the inline code
@@ -103,7 +63,22 @@ impl<'s> LineParser<'s> {
                     self.close_compound(idx, 1, &mut compounds);
                     self.code = false;
                 }
-            } else if after_first_star {
+                after_antislash = false;
+                after_first_star = false;
+                continue;
+            }
+
+            #[cfg(feature="escaping")]
+            if after_antislash {
+                after_antislash = false;
+                continue;
+            } else if char=='\\' {
+                self.close_compound(idx, 1, &mut compounds);
+                after_antislash = true;
+                continue;
+            }
+
+            if after_first_star {
                 match char {
                     '*' => {
                         // this is the second star
@@ -398,6 +373,43 @@ mod tests {
                 Compound::raw_str("I").italic(),
                 Compound::raw_str("striked").strikeout(),
                 Compound::raw_str("I").italic(),
+            ])
+        );
+    }
+
+    #[test]
+    fn escapes() {
+        assert_eq!(
+            Line::from(
+                "no \\*italic\\* here"
+            ),
+            Line::new_paragraph(vec![
+                Compound::raw_str("no "),
+                Compound::raw_str("*italic"),
+                Compound::raw_str("* here"),
+            ])
+        );
+        assert_eq!(
+            Line::from(
+                "*italic\\*and\\*still\\*italic*"
+            ),
+            Line::new_paragraph(vec![
+                Compound::raw_str("italic").italic(),
+                Compound::raw_str("*and").italic(),
+                Compound::raw_str("*still").italic(),
+                Compound::raw_str("*italic").italic(),
+            ])
+        );
+        assert_eq!(
+            Line::from("\\**Italic then **bold\\\\ and \\`italic `and some *code*`** and italic*\\*"),
+            Line::new_paragraph(vec![
+                Compound::raw_str("*"),
+                Compound::raw_str("Italic then ").italic(),
+                Compound::raw_str("bold").bold().italic(),
+                Compound::raw_str("\\ and ").bold().italic(),
+                Compound::raw_str("`italic ").bold().italic(),
+                Compound::raw_str("and some *code*").bold().italic().code(),
+                Compound::raw_str(" and italic*").italic(),
             ])
         );
     }
