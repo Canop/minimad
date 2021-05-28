@@ -56,7 +56,12 @@ impl<'s> LineParser<'s> {
         let mut after_first_tilde = false;
         let mut after_antislash = false;
 
-        for (idx, char) in self.src.char_indices().skip(self.idx) {
+        // self.idx tracks byte indices, but str::char_indices returns an
+        // iterator over chars, which may be wider than one byte. So we need
+        // to skip not self.idx elements, but the number of chars that occur
+        // before self.idx
+        let chars_to_skip = self.src[..self.idx].chars().count();
+        for (idx, char) in self.src.char_indices().skip(chars_to_skip) {
             if self.code {
                 // only one thing matters: whether we're closing the inline code
                 if char == '`' {
@@ -491,6 +496,27 @@ mod tests {
                     style: CompositeStyle::Quote,
                     compounds: vec![Compound::raw_str("some quote"),],
                 }
+            ])
+        );
+    }
+
+    #[test]
+    fn table_row_issue_4() {
+        assert_eq!(
+            Line::from("| 安 | 安 | 安 |"),
+            Line::new_table_row(vec![
+                Composite {
+                    style: CompositeStyle::Paragraph,
+                    compounds: vec![Compound::raw_str("安"),],
+                },
+                Composite {
+                    style: CompositeStyle::Paragraph,
+                    compounds: vec![Compound::raw_str("安"),],
+                },
+                Composite {
+                    style: CompositeStyle::Paragraph,
+                    compounds: vec![Compound::raw_str("安"),],
+                },
             ])
         );
     }
