@@ -515,9 +515,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
             if !self.lines_to_exclude[idx] {
                 lines.push(line);
             }
-            for line in self.lines_to_add[idx].drain(..) {
-                lines.push(line);
-            }
+            lines.append(&mut self.lines_to_add[idx]);
         }
         Text { lines }
     }

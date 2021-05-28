@@ -27,7 +27,7 @@ If you still think you might use Minimad directly (not through Temimad), you may
 
 ```toml
 [dependencies]
-minimad = "0.5"
+minimad = "0.7"
 ```
 
 ```rust
