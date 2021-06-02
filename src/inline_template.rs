@@ -97,9 +97,10 @@ impl<'a> InlineTemplate<'a> {
 #[macro_export]
 macro_rules! mad_inline {
     ( $md: literal $(, $value: expr )* $(,)? ) => {{
-        lazy_static! {
-            static ref TEMPLATE: minimad::InlineTemplate<'static> = minimad::InlineTemplate::from($md);
-        }
+        use minimad::once_cell::sync::Lazy;
+        static TEMPLATE: Lazy<minimad::InlineTemplate<'static>> = Lazy::new(|| {
+            minimad::InlineTemplate::from($md)
+        });
         #[allow(unused_mut)]
         #[allow(unused_variables)]
         let mut arg_idx = 0;

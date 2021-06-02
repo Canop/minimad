@@ -1,7 +1,7 @@
 /*!
 This crate provides a *very* simple markdown parser.
 
-Its main motivation was to be the basis of the [termimad](https://github.com/Canop/termimad) lib, which displays static and dynamic markdown snippets on a terminal without mixing the skin with the code and wrapping the text and tables as needed.
+It's the basis of the [termimad](https://github.com/Canop/termimad) lib, which displays static and dynamic markdown snippets on a terminal without mixing the skin with the code and wrapping the text and tables as needed.
 
 It can be used on its own:
 
@@ -30,6 +30,26 @@ assert_eq!(
     ])
 );
 ```
+
+The [mad_inline] macro is useful for semi-dynamic markdown building: it prevents characters like `'*'` from messing the style:
+
+```
+use minimad::*;
+
+let md1 = mad_inline!(
+    "**$0 formula:** *$1*", // the markdown template, interpreted only once
+    "Disk",  // fills $0
+    "2*π*r", // fills $1. Note that the stars don't mess the markdown
+);
+let md2 = Composite::from(vec![
+    Compound::raw_str("Disk formula:").bold(),
+    Compound::raw_str(" "),
+    Compound::raw_str("2*π*r").italic(),
+]);
+```
+
+Note that Termimad contains macros and tools to deal with templates. If your goal is to print in the console you should use Termimad's functions.
+
 */
 
 pub mod clean;
@@ -57,9 +77,8 @@ pub use {
     text_template::{SubTemplateExpander, TextTemplate, TextTemplateExpander},
 };
 
-#[allow(unused_imports)]
-#[macro_use]
-extern crate lazy_static;
+/// reexport so that macros can be used without imports
+pub use once_cell;
 
 /// parse a markdown text
 pub fn parse_text<'s>(md: &'s str) -> Text<'s> {
