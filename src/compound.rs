@@ -43,6 +43,14 @@ impl<'s> Compound<'s> {
     pub fn set_str(&mut self, src: &'s str) {
         self.src = src;
     }
+    /// change the attributes by taking the values from the other
+    /// compound, keeping the str
+    pub fn set_attributes_from(&mut self, other: &Compound) {
+        self.bold = other.bold;
+        self.italic = other.italic;
+        self.code = other.code;
+        self.strikeout = other.strikeout;
+    }
     /// return a sub part of the compound, with the same styling
     /// r_start is relative, that is 0 is the index of the first
     /// byte of this compound.
