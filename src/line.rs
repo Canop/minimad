@@ -77,10 +77,7 @@ impl Line<'_> {
     }
     #[inline(always)]
     pub fn is_table_row(&self) -> bool {
-        match self {
-            Line::TableRow(_) => true,
-            _ => false,
-        }
+        matches!(self, Line::TableRow(_))
     }
     #[inline(always)]
     pub fn is_table_part(&self) -> bool {

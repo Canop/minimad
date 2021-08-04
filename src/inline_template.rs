@@ -54,10 +54,8 @@ impl<'a> InlineTemplate<'a> {
                         compounds.push(compound.sub(idx - 1, start)); // placeholder
                     }
                     after_dollar = false;
-                } else {
-                    if char == '$' {
-                        after_dollar = true;
-                    }
+                } else if char == '$' {
+                    after_dollar = true;
                 }
             }
             let tail = compound.tail(start);

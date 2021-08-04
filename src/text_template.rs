@@ -102,7 +102,7 @@ fn find_args<'s>(
             if c == '$' {
                 if let Some((bridx, c)) = iter.next() {
                     if c == '{' {
-                        while let Some((idx, c)) = iter.next() {
+                        for (idx, c) in &mut iter {
                             if c == '}' {
                                 if idx - bridx > 1 {
                                     if start + 1 < bridx {
@@ -297,7 +297,7 @@ fn set_all_md_in_text<'s, 'b>(
     template: &TextTemplate<'s>,
     text: &mut Text<'s>,
     line_offset: usize,
-    md_replacements: &Vec<Replacement<'s, 'b>>,
+    md_replacements: &[Replacement<'s, 'b>],
 ) {
     if md_replacements.is_empty() {
         return; // no need to iterate over all compound_args
@@ -356,7 +356,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
     pub fn set(&mut self, name: &str, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
-        set_in_text(&self.template, &mut self.text, 0, Some(name), value);
+        set_in_text(self.template, &mut self.text, 0, Some(name), value);
         self
     }
 
@@ -364,7 +364,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template).
     /// This can be used at start to have a "default" value.
     pub fn set_all(&mut self, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
-        set_in_text(&self.template, &mut self.text, 0, None, value);
+        set_in_text(self.template, &mut self.text, 0, None, value);
         self
     }
 
@@ -488,7 +488,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
                 }
                 for repl in &sub_expansion.raw_replacements {
                     set_in_text(
-                        &self.template,
+                        self.template,
                         &mut sub_text,
                         sub_template.start_line_idx,
                         Some(repl.name),

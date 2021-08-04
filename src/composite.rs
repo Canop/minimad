@@ -48,24 +48,15 @@ impl<'a> Composite<'a> {
     }
     #[inline(always)]
     pub fn is_code(&self) -> bool {
-        match self.style {
-            CompositeStyle::Code { .. } => true,
-            _ => false,
-        }
+        matches!(self.style, CompositeStyle::Code { .. })
     }
     #[inline(always)]
     pub fn is_list_item(&self) -> bool {
-        match self.style {
-            CompositeStyle::ListItem { .. } => true,
-            _ => false,
-        }
+        matches!(self.style, CompositeStyle::ListItem { .. })
     }
     #[inline(always)]
     pub fn is_quote(&self) -> bool {
-        match self.style {
-            CompositeStyle::Quote { .. } => true,
-            _ => false,
-        }
+        matches!(self.style, CompositeStyle::Quote { .. })
     }
     /// return the total number of characters in the composite
     ///

@@ -81,20 +81,20 @@ pub use {
 pub use once_cell;
 
 /// parse a markdown text
-pub fn parse_text<'s>(md: &'s str) -> Text<'s> {
+pub fn parse_text(md: &str) -> Text {
     Text::from(md)
 }
 
 /// parse a line, which is meant to be part of a markdown text.
 /// This function shouldn't usually be used: if you don't want
 /// a text you probably need `parse_inline`
-pub fn parse_line<'s>(md: &'s str) -> Line<'s> {
+pub fn parse_line(md: &str) -> Line {
     Line::from(md)
 }
 
 /// parse a monoline markdown snippet which isn't from a text.
 /// Don't produce some types of line: TableRow, Code, ListItem
 ///  as they only make sense in a multi-line text.
-pub fn parse_inline<'s>(md: &'s str) -> Composite<'s> {
+pub fn parse_inline(md: &str) -> Composite {
     Composite::from_inline(md)
 }
