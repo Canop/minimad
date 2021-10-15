@@ -53,28 +53,15 @@ Note that Termimad contains macros and tools to deal with templates. If your goa
 */
 
 pub mod clean;
-mod composite;
-mod compound;
-mod header;
-mod inline_template;
-mod line;
 mod line_parser;
-mod owning_template_expander;
-mod tbl;
-mod text;
-mod text_template;
+mod markdown;
+mod template;
 
 pub use {
-    composite::{Composite, CompositeStyle},
-    compound::{Alignment, Compound},
-    header::header_level,
-    inline_template::InlineTemplate,
-    line::Line,
-    line::MAX_HEADER_DEPTH,
-    owning_template_expander::OwningTemplateExpander,
-    tbl::{TableRow, TableRule},
-    text::Text,
-    text_template::{SubTemplateExpander, TextTemplate, TextTemplateExpander},
+    clean::*,
+    line_parser::*,
+    markdown::*,
+    template::*,
 };
 
 /// reexport so that macros can be used without imports

@@ -1,6 +1,4 @@
-use {
-    crate::*,
-};
+use crate::*;
 
 /// The structure parsing a line or part of a line.
 /// A LineParser initialized from a markdown string exposes 2 main methods:
