@@ -1,7 +1,4 @@
-use crate::composite::{Composite, CompositeStyle};
-use crate::compound::{Alignment, Compound};
-use crate::line_parser::LineParser;
-use crate::tbl::{TableRow, TableRule};
+use crate::*;
 
 pub const MAX_HEADER_DEPTH: usize = 8;
 
@@ -77,12 +74,10 @@ impl Line<'_> {
     }
     #[inline(always)]
     pub fn is_table_row(&self) -> bool {
-        match self {
-            Line::TableRow(_) => true,
-            _ => false,
-        }
+        matches!(self, Line::TableRow(_))
     }
     #[inline(always)]
+    #[allow(clippy::match_like_matches_macro)]
     pub fn is_table_part(&self) -> bool {
         match self {
             Line::Normal(_) => false,

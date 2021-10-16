@@ -1,10 +1,7 @@
 /// a composite is a group of compounds. It can be a whole line,
 /// or a table cell
-///
-use crate::{
-    compound::{Alignment, Compound},
-    line_parser::LineParser,
-};
+
+use crate::*;
 
 /// The global style of a composite
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -35,12 +32,18 @@ impl<'a> From<Vec<Compound<'a>>> for Composite<'a> {
     }
 }
 
-impl<'a> Composite<'a> {
-    pub fn new() -> Composite<'a> {
-        Composite {
+impl Default for Composite<'_> {
+    fn default() -> Self {
+        Self {
             style: CompositeStyle::Paragraph,
             compounds: Vec::new(),
         }
+    }
+}
+
+impl<'a> Composite<'a> {
+    pub fn new() -> Composite<'a> {
+        Self::default()
     }
     /// parse a monoline markdown snippet which isn't from a text.
     pub fn from_inline(md: &'a str) -> Composite<'a> {
@@ -48,24 +51,15 @@ impl<'a> Composite<'a> {
     }
     #[inline(always)]
     pub fn is_code(&self) -> bool {
-        match self.style {
-            CompositeStyle::Code { .. } => true,
-            _ => false,
-        }
+        matches!(self.style, CompositeStyle::Code { .. })
     }
     #[inline(always)]
     pub fn is_list_item(&self) -> bool {
-        match self.style {
-            CompositeStyle::ListItem { .. } => true,
-            _ => false,
-        }
+        matches!(self.style, CompositeStyle::ListItem { .. })
     }
     #[inline(always)]
     pub fn is_quote(&self) -> bool {
-        match self.style {
-            CompositeStyle::Quote { .. } => true,
-            _ => false,
-        }
+        matches!(self.style, CompositeStyle::Quote { .. })
     }
     /// return the total number of characters in the composite
     ///
@@ -190,8 +184,7 @@ impl<'a> Composite<'a> {
 // Tests trimming composite
 #[cfg(test)]
 mod tests {
-    use crate::composite::*;
-    use crate::compound::*;
+    use crate::*;
 
     #[test]
     fn composite_trim() {

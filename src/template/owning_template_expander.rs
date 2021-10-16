@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 /// A template expander owning the value you set
 /// so that you don't have to keep them around until
@@ -119,26 +119,26 @@ impl<'s> OwningTemplateExpander<'s> {
         for op in &self.ops {
             match op {
                 FillingOperation::Set { name, value } => {
-                    expander.set(name, &value);
+                    expander.set(name, value);
                 }
                 FillingOperation::SetMD { name, value } => {
-                    expander.set_md(name, &value);
+                    expander.set_md(name, value);
                 }
                 FillingOperation::SetLines { name, value } => {
-                    expander.set_lines(name, &value);
+                    expander.set_lines(name, value);
                 }
                 FillingOperation::SetLinesMD { name, value } => {
-                    expander.set_lines_md(name, &value);
+                    expander.set_lines_md(name, value);
                 }
                 FillingOperation::Sub { name, sub_expander } => {
                     let sub = expander.sub(name);
                     for op in &sub_expander.ops {
                         match op {
                             SubFillingOperation::Set { name, value } => {
-                                sub.set(name, &value);
+                                sub.set(name, value);
                             }
                             SubFillingOperation::SetMD { name, value } => {
-                                sub.set_md(name, &value);
+                                sub.set_md(name, value);
                             }
                         }
                     }

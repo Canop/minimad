@@ -53,48 +53,35 @@ Note that Termimad contains macros and tools to deal with templates. If your goa
 */
 
 pub mod clean;
-mod composite;
-mod compound;
-mod header;
-mod inline_template;
-mod line;
 mod line_parser;
-mod owning_template_expander;
-mod tbl;
-mod text;
-mod text_template;
+mod markdown;
+mod template;
 
 pub use {
-    composite::{Composite, CompositeStyle},
-    compound::{Alignment, Compound},
-    header::header_level,
-    inline_template::InlineTemplate,
-    line::Line,
-    line::MAX_HEADER_DEPTH,
-    owning_template_expander::OwningTemplateExpander,
-    tbl::{TableRow, TableRule},
-    text::Text,
-    text_template::{SubTemplateExpander, TextTemplate, TextTemplateExpander},
+    clean::*,
+    line_parser::*,
+    markdown::*,
+    template::*,
 };
 
 /// reexport so that macros can be used without imports
 pub use once_cell;
 
 /// parse a markdown text
-pub fn parse_text<'s>(md: &'s str) -> Text<'s> {
+pub fn parse_text(md: &str) -> Text {
     Text::from(md)
 }
 
 /// parse a line, which is meant to be part of a markdown text.
 /// This function shouldn't usually be used: if you don't want
 /// a text you probably need `parse_inline`
-pub fn parse_line<'s>(md: &'s str) -> Line<'s> {
+pub fn parse_line(md: &str) -> Line {
     Line::from(md)
 }
 
 /// parse a monoline markdown snippet which isn't from a text.
 /// Don't produce some types of line: TableRow, Code, ListItem
 ///  as they only make sense in a multi-line text.
-pub fn parse_inline<'s>(md: &'s str) -> Composite<'s> {
+pub fn parse_inline(md: &str) -> Composite {
     Composite::from_inline(md)
 }

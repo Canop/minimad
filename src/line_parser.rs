@@ -1,6 +1,4 @@
-use {
-    crate::*,
-};
+use crate::*;
 
 /// The structure parsing a line or part of a line.
 /// A LineParser initialized from a markdown string exposes 2 main methods:
@@ -36,7 +34,7 @@ impl<'s> LineParser<'s> {
     fn close_compound(&mut self, end: usize, tag_length: usize, compounds: &mut Vec<Compound<'s>>) {
         if end > self.idx {
             compounds.push(Compound::new(
-                &self.src,
+                self.src,
                 self.idx,
                 end,
                 self.bold,
@@ -48,7 +46,7 @@ impl<'s> LineParser<'s> {
         self.idx = end + tag_length;
     }
     fn code_compound_from_idx(&self, idx: usize) -> Compound<'s> {
-        Compound::new(&self.src, idx, self.src.len(), false, false, true, false)
+        Compound::new(self.src, idx, self.src.len(), false, false, true, false)
     }
     fn parse_compounds(&mut self, stop_on_pipe: bool) -> Vec<Compound<'s>> {
         let mut compounds = Vec::new();
@@ -273,9 +271,7 @@ fn compounds_are_rule(compounds: &[Compound<'_>]) -> bool {
 /// Tests of line parsing
 #[cfg(test)]
 mod tests {
-    use crate::composite::*;
-    use crate::compound::*;
-    use crate::line::*;
+    use crate::*;
 
     #[test]
     fn simple_line_parsing() {

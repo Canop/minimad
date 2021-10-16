@@ -1,4 +1,4 @@
-use crate::{line::Line, line_parser::LineParser};
+use crate::*;
 
 /// a text, that is just a collection of lines
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
@@ -57,7 +57,7 @@ impl<'s> Text<'s> {
 /// Tests of text parsing
 #[cfg(test)]
 mod tests {
-    use crate::{clean, compound::*, line::*, text::Text};
+    use crate::*;
 
     #[test]
     fn indented_code_between_fences() {

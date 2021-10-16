@@ -54,10 +54,8 @@ impl<'a> InlineTemplate<'a> {
                         compounds.push(compound.sub(idx - 1, start)); // placeholder
                     }
                     after_dollar = false;
-                } else {
-                    if char == '$' {
-                        after_dollar = true;
-                    }
+                } else if char == '$' {
+                    after_dollar = true;
                 }
             }
             let tail = compound.tail(start);
@@ -118,10 +116,9 @@ macro_rules! mad_inline {
 #[cfg(test)]
 mod tests {
     use crate::{
+        *,
         self as minimad, // because the macro knows "minimad"
-        composite::*,
-        compound::*,
-        inline_template::*,
+        template::inline_template::*,
     };
 
     #[test]

@@ -1,5 +1,4 @@
-use crate::composite::Composite;
-use crate::compound::Alignment;
+use crate::*;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct TableRow<'a> {

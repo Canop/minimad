@@ -1,19 +1,5 @@
 use std::fmt::{self, Write};
 
-/// Left, Center, Right or Unspecified
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum Alignment {
-    Unspecified,
-    Left,
-    Center,
-    Right,
-}
-
-impl Default for Alignment {
-    fn default() -> Self {
-        Alignment::Unspecified
-    }
-}
 
 /// a Compound is a part of a line with a consistent styling.
 /// It can be part of word, several words, some inline code, or even the whole line.
@@ -42,6 +28,14 @@ impl<'s> Compound<'s> {
     /// change the content but keeps the style arguments
     pub fn set_str(&mut self, src: &'s str) {
         self.src = src;
+    }
+    /// change the attributes by taking the values from the other
+    /// compound, keeping the str
+    pub fn set_attributes_from(&mut self, other: &Compound) {
+        self.bold = other.bold;
+        self.italic = other.italic;
+        self.code = other.code;
+        self.strikeout = other.strikeout;
     }
     /// return a sub part of the compound, with the same styling
     /// r_start is relative, that is 0 is the index of the first
