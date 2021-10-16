@@ -271,9 +271,7 @@ fn compounds_are_rule(compounds: &[Compound<'_>]) -> bool {
 /// Tests of line parsing
 #[cfg(test)]
 mod tests {
-    use crate::composite::*;
-    use crate::compound::*;
-    use crate::line::*;
+    use crate::*;
 
     #[test]
     fn simple_line_parsing() {
