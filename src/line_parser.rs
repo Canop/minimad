@@ -74,9 +74,18 @@ impl<'s> LineParser<'s> {
             #[cfg(feature="escaping")]
             if after_antislash {
                 after_antislash = false;
-                continue;
+                match char {
+                    '*' | '~' | '|' | '`' => {
+                        self.close_compound(idx-1, 1, &mut compounds);
+                        continue;
+                    }
+                    '\\' => {
+                        self.close_compound(idx, 1, &mut compounds);
+                        continue;
+                    }
+                    _ => {} // we don't escape at all normal chars
+                }
             } else if char=='\\' {
-                self.close_compound(idx, 1, &mut compounds);
                 after_antislash = true;
                 continue;
             }
@@ -378,6 +387,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature="escaping")]
     #[test]
     fn escapes() {
         assert_eq!(
@@ -388,6 +398,17 @@ mod tests {
                 Compound::raw_str("no "),
                 Compound::raw_str("*italic"),
                 Compound::raw_str("* here"),
+            ])
+        );
+        // check we're not removing chars with the escaping, and that
+        // we're not losing the '\' when it's not escaping something
+        // (only markdown modifiers can be escaped)
+        assert_eq!(
+            Line::from(
+                "a\\bc\\"
+            ),
+            Line::new_paragraph(vec![
+                Compound::raw_str("a\\bc\\"),
             ])
         );
         assert_eq!(
@@ -406,8 +427,8 @@ mod tests {
             Line::new_paragraph(vec![
                 Compound::raw_str("*"),
                 Compound::raw_str("Italic then ").italic(),
-                Compound::raw_str("bold").bold().italic(),
-                Compound::raw_str("\\ and ").bold().italic(),
+                Compound::raw_str("bold\\").bold().italic(),
+                Compound::raw_str(" and ").bold().italic(),
                 Compound::raw_str("`italic ").bold().italic(),
                 Compound::raw_str("and some *code*").bold().italic().code(),
                 Compound::raw_str(" and italic*").italic(),

@@ -92,6 +92,17 @@ impl<'a> InlineTemplate<'a> {
 /// * arguments can be omited, repeated, or given in arbitrary order
 /// * no support for fmt parameters or arguments other than `&str`
 ///
+/// Example:
+/// ```
+/// use minimad::*;
+///
+/// let composite = mad_inline!(
+///     "**$0 formula:** *$1*", // the markdown template, interpreted only once
+///     "Disk",  // fills $0
+///     "2*π*r", // fills $1. Note that the stars don't mess the markdown
+/// );
+/// ```
+///
 #[macro_export]
 macro_rules! mad_inline {
     ( $md: literal $(, $value: expr )* $(,)? ) => {{
