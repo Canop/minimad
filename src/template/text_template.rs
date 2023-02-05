@@ -63,7 +63,7 @@ pub struct TextTemplateExpander<'s, 'b> {
 //-------------------------------------------------------------------
 
 fn is_valid_name_char(c: char) -> bool {
-    c.is_ascii_lowercase() || c.is_digit(10) || c == '_' || c == '-'
+    c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-'
 }
 
 fn read_sub_template_token(md_line: &str) -> SubTemplateToken<'_> {
@@ -163,7 +163,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
                 SubTemplateToken::None => {}
             }
             let line_idx = text.lines.len();
-            let parser = LineParser::from(md_line);
+            let parser = parser::LineParser::from(md_line);
             let mut line = if between_fences {
                 parser.as_code()
             } else {
@@ -290,6 +290,7 @@ fn set_in_text<'s>(
     }
 }
 
+#[allow(clippy::needless_lifetimes)]
 fn set_all_md_in_text<'s, 'b>(
     template: &TextTemplate<'s>,
     text: &mut Text<'s>,
@@ -402,7 +403,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
             if compound_arg.name == name {
                 // the line holding the compound is now considered a template, it's removed
                 self.lines_to_exclude[compound_arg.line_idx] = true;
-                for line in md.lines().map(|md| LineParser::from(md).line()) {
+                for line in md.lines().map(|md| parser::LineParser::from(md).line()) {
                     self.lines_to_add[compound_arg.line_idx].push(line);
                 }
             }

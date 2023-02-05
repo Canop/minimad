@@ -14,7 +14,7 @@ pub enum Line<'a> {
 
 impl Line<'_> {
     pub fn from(md: &str) -> Line<'_> {
-        LineParser::from(md).line()
+        parser::LineParser::from(md).line()
     }
     #[inline(always)]
     pub fn char_length(&self) -> usize {

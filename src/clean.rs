@@ -2,8 +2,21 @@ pub fn is_blank(s: &str) -> bool {
     s.chars().all(char::is_whitespace)
 }
 
-/// remove the superfluous lines and indentations you get when you insert
+/// Remove the superfluous lines and indentations you get when you insert
 ///  in your code a multi-line raw literal.
+/// ```
+/// let lines = minimad::clean::lines(
+///     r#"
+///     test
+///         hop
+///     hip
+/// "#,
+/// );
+/// assert_eq!(lines.len(), 3);
+/// assert_eq!(lines[0], "test");
+/// assert_eq!(lines[1], "    hop");
+/// assert_eq!(lines[2], "hip");
+/// ```
 pub fn lines(src: &str) -> Vec<&str> {
     let mut result_lines: Vec<&str> = Vec::new();
     let mut src_lines = src.lines();
@@ -50,17 +63,3 @@ pub fn lines(src: &str) -> Vec<&str> {
     result_lines
 }
 
-#[test]
-fn test_lines_cleaning() {
-    let lines = lines(
-        r#"
-        test
-            hop
-        hip
-    "#,
-    );
-    assert_eq!(lines.len(), 3);
-    assert_eq!(lines[0], "test");
-    assert_eq!(lines[1], "    hop");
-    assert_eq!(lines[2], "hip");
-}

@@ -14,10 +14,10 @@ use crate::*;
 pub struct LineParser<'s> {
     src: &'s str,
     idx: usize, // current index in string, in bytes
-    bold: bool,
-    italic: bool,
-    code: bool,
-    strikeout: bool,
+    pub(crate) code: bool,
+    pub(crate) italic: bool,
+    pub(crate) bold: bool,
+    pub(crate) strikeout: bool,
 }
 
 impl<'s> LineParser<'s> {
@@ -215,6 +215,9 @@ impl<'s> LineParser<'s> {
         }
     }
     pub fn line(mut self) -> Line<'s> {
+        self.parse_line()
+    }
+    pub(crate) fn parse_line(&mut self) -> Line<'s> {
         if self.src.starts_with('|') {
             let tr = TableRow {
                 cells: self.parse_cells(),

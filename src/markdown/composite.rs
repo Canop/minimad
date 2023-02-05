@@ -47,7 +47,7 @@ impl<'a> Composite<'a> {
     }
     /// parse a monoline markdown snippet which isn't from a text.
     pub fn from_inline(md: &'a str) -> Composite<'a> {
-        LineParser::from(md).inline()
+        parser::LineParser::from(md).inline()
     }
     #[inline(always)]
     pub fn is_code(&self) -> bool {

@@ -5,6 +5,7 @@ use {
 
 /// count the number of '#' at start. Return 0 if they're
 /// not followed by a ' ' or if they're too many
+#[allow(clippy::needless_range_loop)]
 pub fn header_level(src: &str) -> usize {
     let src = src.as_bytes();
     let mut l: usize = src.len();

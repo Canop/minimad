@@ -10,6 +10,7 @@ pub struct OwningTemplateExpander<'s> {
     ops: Vec<FillingOperation<'s>>,
     default_value: Option<String>,
 }
+#[derive(Default)]
 pub struct OwningSubTemplateExpander<'s> {
     ops: Vec<SubFillingOperation<'s>>,
 }
@@ -160,6 +161,16 @@ impl<'s> OwningSubTemplateExpander<'s> {
             name,
             value: value.to_string(),
         });
+        self
+    }
+
+    pub fn set_option<S: std::fmt::Display>(&mut self, name: &'s str, value: Option<S>) -> &mut Self {
+        if let Some(value) = value {
+            self.ops.push(SubFillingOperation::Set {
+                name,
+                value: value.to_string(),
+            });
+        }
         self
     }
 

@@ -53,14 +53,14 @@ Note that Termimad contains macros and tools to deal with templates. If your goa
 */
 
 pub mod clean;
-mod line_parser;
 mod markdown;
+pub mod parser;
 mod template;
 
 pub use {
     clean::*,
-    line_parser::*,
     markdown::*,
+    parser::Options,
     template::*,
 };
 
@@ -68,8 +68,11 @@ pub use {
 pub use once_cell;
 
 /// parse a markdown text
-pub fn parse_text(md: &str) -> Text {
-    Text::from(md)
+pub fn parse_text(
+    md: &str,
+    options: Options,
+) -> Text {
+    parser::parse(md, options)
 }
 
 /// parse a line, which is meant to be part of a markdown text.
