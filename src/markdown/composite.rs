@@ -1,6 +1,5 @@
 /// a composite is a group of compounds. It can be a whole line,
 /// or a table cell
-
 use crate::*;
 
 /// The global style of a composite
@@ -126,7 +125,10 @@ impl<'a> Composite<'a> {
         self.compounds.len() == 0
     }
     /// remove characters, and whole compounds if necessary
-    pub fn remove_chars_left(&mut self, mut to_remove: usize) {
+    pub fn remove_chars_left(
+        &mut self,
+        mut to_remove: usize,
+    ) {
         while to_remove > 0 {
             if self.compounds.is_empty() {
                 return;
@@ -142,7 +144,10 @@ impl<'a> Composite<'a> {
         }
     }
     /// remove characters, and whole compounds if necessary
-    pub fn remove_chars_right(&mut self, mut to_remove: usize) {
+    pub fn remove_chars_right(
+        &mut self,
+        mut to_remove: usize,
+    ) {
         while to_remove > 0 {
             if self.compounds.is_empty() {
                 return;
@@ -163,7 +168,11 @@ impl<'a> Composite<'a> {
     ///
     /// align is the alignment of the composite. If the composite is left
     ///  aligned, we remove chars at the right.
-    pub fn remove_chars(&mut self, to_remove: usize, align: Alignment) {
+    pub fn remove_chars(
+        &mut self,
+        to_remove: usize,
+        align: Alignment,
+    ) {
         match align {
             Alignment::Left => {
                 self.remove_chars_right(to_remove);

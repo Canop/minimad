@@ -43,4 +43,3 @@ fn header_level_count() {
     assert_eq!(header_level("######## a b"), 8);
     assert_eq!(header_level("######### a b"), 0); // too deep
 }
-

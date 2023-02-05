@@ -208,7 +208,10 @@ impl<'s> TextTemplate<'s> {
     /// This might be optimized by an internal vec in the future (or
     /// by just having another structure than a Text as internal md
     /// storage)
-    fn get_sub_of_line(&self, line_idx: usize) -> Option<usize> {
+    fn get_sub_of_line(
+        &self,
+        line_idx: usize,
+    ) -> Option<usize> {
         for (sub_idx, sub_template) in self.sub_templates.iter().enumerate() {
             if line_idx >= sub_template.start_line_idx
                 && line_idx < sub_template.start_line_idx + sub_template.line_count
@@ -248,18 +251,30 @@ impl<'s, 'b> From<&'b TextTemplate<'s>> for TextTemplateExpander<'s, 'b> {
 
 impl<'s, 'b> SubTemplateExpander<'s, 'b> {
     /// replace placeholders with name `name` with the given value, not interpreted as markdown
-    pub fn set(&mut self, name: &'b str, value: &'s str) -> &mut SubTemplateExpander<'s, 'b> {
+    pub fn set(
+        &mut self,
+        name: &'b str,
+        value: &'s str,
+    ) -> &mut SubTemplateExpander<'s, 'b> {
         self.raw_replacements.push(Replacement { name, value });
         self
     }
     /// replace placeholder with name `name` with the given value, interpreted as markdown
-    pub fn set_md(&mut self, name: &'b str, value: &'s str) -> &mut SubTemplateExpander<'s, 'b> {
+    pub fn set_md(
+        &mut self,
+        name: &'b str,
+        value: &'s str,
+    ) -> &mut SubTemplateExpander<'s, 'b> {
         self.md_replacements.push(Replacement { name, value });
         self
     }
 }
 
-fn set_in_line<'s>(line: &mut Line<'s>, compound_arg: &CompoundArg<'s>, value: &'s str) {
+fn set_in_line<'s>(
+    line: &mut Line<'s>,
+    compound_arg: &CompoundArg<'s>,
+    value: &'s str,
+) {
     match line {
         Line::Normal(composite) => {
             composite.compounds[compound_arg.compound_idx].set_str(value);
@@ -280,7 +295,7 @@ fn set_in_text<'s>(
     value: &'s str,
 ) {
     for compound_arg in &template.compound_args {
-        if name.is_none () || name == Some(compound_arg.name) {
+        if name.is_none() || name == Some(compound_arg.name) {
             let idx = compound_arg.line_idx;
             if idx < line_offset || idx - line_offset >= text.lines.len() {
                 continue; // can happen if a replacement name is present in the outside text
@@ -353,7 +368,11 @@ fn replace_compound<'s>(
 impl<'s, 'b> TextTemplateExpander<'s, 'b> {
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
-    pub fn set(&mut self, name: &str, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+    pub fn set(
+        &mut self,
+        name: &str,
+        value: &'s str,
+    ) -> &mut TextTemplateExpander<'s, 'b> {
         set_in_text(self.template, &mut self.text, 0, Some(name), value);
         self
     }
@@ -361,13 +380,20 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
     /// replace all placeholders with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template).
     /// This can be used at start to have a "default" value.
-    pub fn set_all(&mut self, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+    pub fn set_all(
+        &mut self,
+        value: &'s str,
+    ) -> &mut TextTemplateExpander<'s, 'b> {
         set_in_text(self.template, &mut self.text, 0, None, value);
         self
     }
 
     /// replace placeholders with name `name` with the given value, interpreted as markdown
-    pub fn set_md(&mut self, name: &'b str, value: &'s str) -> &mut TextTemplateExpander<'s, 'b> {
+    pub fn set_md(
+        &mut self,
+        name: &'b str,
+        value: &'s str,
+    ) -> &mut TextTemplateExpander<'s, 'b> {
         self.md_replacements.push(Replacement { name, value });
         self
     }
@@ -413,7 +439,10 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
 
     /// prepare expansion of a sub template and return a mutable reference to the
     ///  object in which to set compound replacements
-    pub fn sub(&mut self, name: &'b str) -> &mut SubTemplateExpander<'s, 'b> {
+    pub fn sub(
+        &mut self,
+        name: &'b str,
+    ) -> &mut SubTemplateExpander<'s, 'b> {
         let sub = SubTemplateExpander {
             name,
             raw_replacements: Vec::new(),
@@ -518,4 +547,3 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
         Text { lines }
     }
 }
-

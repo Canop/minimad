@@ -12,7 +12,10 @@ struct Arg {
 }
 #[allow(dead_code)] // this isn't really dead code, it depends on the macro used
 impl Arg {
-    fn add(&mut self, idx: usize) {
+    fn add(
+        &mut self,
+        idx: usize,
+    ) {
         self.compounds_idx.push(idx);
     }
 }
@@ -71,7 +74,12 @@ impl<'a> InlineTemplate<'a> {
         self.composite.clone()
     }
 
-    pub fn apply(&self, composite: &mut Composite<'a>, arg_idx: usize, value: &'a str) {
+    pub fn apply(
+        &self,
+        composite: &mut Composite<'a>,
+        arg_idx: usize,
+        value: &'a str,
+    ) {
         if arg_idx > 9 {
             return;
         }
@@ -127,9 +135,9 @@ macro_rules! mad_inline {
 #[cfg(test)]
 mod tests {
     use crate::{
-        *,
         self as minimad, // because the macro knows "minimad"
         template::inline_template::*,
+        *,
     };
 
     #[test]

@@ -60,7 +60,10 @@ impl Line<'_> {
             compounds,
         })
     }
-    pub fn new_header(level: u8, compounds: Vec<Compound<'_>>) -> Line<'_> {
+    pub fn new_header(
+        level: u8,
+        compounds: Vec<Compound<'_>>,
+    ) -> Line<'_> {
         Line::Normal(Composite {
             style: CompositeStyle::Header(level),
             compounds,

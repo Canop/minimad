@@ -1,4 +1,3 @@
-
 /// Markdown parsing options
 #[derive(Debug, Clone, Copy)]
 pub struct Options {
@@ -45,27 +44,45 @@ impl Default for Options {
 }
 
 impl Options {
-    pub fn clean_indentations(mut self, value: bool) -> Self {
+    pub fn clean_indentations(
+        mut self,
+        value: bool,
+    ) -> Self {
         self.clean_indentations = value;
         self
     }
-    pub fn continue_inline_code(mut self, value: bool) -> Self {
+    pub fn continue_inline_code(
+        mut self,
+        value: bool,
+    ) -> Self {
         self.continue_inline_code = value;
         self
     }
-    pub fn continue_italic(mut self, value: bool) -> Self {
+    pub fn continue_italic(
+        mut self,
+        value: bool,
+    ) -> Self {
         self.continue_italic = value;
         self
     }
-    pub fn continue_bold(mut self, value: bool) -> Self {
+    pub fn continue_bold(
+        mut self,
+        value: bool,
+    ) -> Self {
         self.continue_bold = value;
         self
     }
-    pub fn continue_strikeout(mut self, value: bool) -> Self {
+    pub fn continue_strikeout(
+        mut self,
+        value: bool,
+    ) -> Self {
         self.continue_strikeout = value;
         self
     }
-    pub fn continue_spans(mut self, value: bool) -> Self {
+    pub fn continue_spans(
+        mut self,
+        value: bool,
+    ) -> Self {
         self.continue_inline_code = value;
         self.continue_italic = value;
         self.continue_bold = value;

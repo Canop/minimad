@@ -31,7 +31,12 @@ impl<'s> LineParser<'s> {
             strikeout: false,
         }
     }
-    fn close_compound(&mut self, end: usize, tag_length: usize, compounds: &mut Vec<Compound<'s>>) {
+    fn close_compound(
+        &mut self,
+        end: usize,
+        tag_length: usize,
+        compounds: &mut Vec<Compound<'s>>,
+    ) {
         if end > self.idx {
             compounds.push(Compound::new(
                 self.src,
@@ -45,10 +50,16 @@ impl<'s> LineParser<'s> {
         }
         self.idx = end + tag_length;
     }
-    fn code_compound_from_idx(&self, idx: usize) -> Compound<'s> {
+    fn code_compound_from_idx(
+        &self,
+        idx: usize,
+    ) -> Compound<'s> {
         Compound::new(self.src, idx, self.src.len(), false, false, true, false)
     }
-    fn parse_compounds(&mut self, stop_on_pipe: bool) -> Vec<Compound<'s>> {
+    fn parse_compounds(
+        &mut self,
+        stop_on_pipe: bool,
+    ) -> Vec<Compound<'s>> {
         let mut compounds = Vec::new();
         let mut after_first_star = false;
         let mut after_first_tilde = false;
@@ -71,12 +82,12 @@ impl<'s> LineParser<'s> {
                 continue;
             }
 
-            #[cfg(feature="escaping")]
+            #[cfg(feature = "escaping")]
             if after_antislash {
                 after_antislash = false;
                 match char {
                     '*' | '~' | '|' | '`' => {
-                        self.close_compound(idx-1, 1, &mut compounds);
+                        self.close_compound(idx - 1, 1, &mut compounds);
                         continue;
                     }
                     '\\' => {
@@ -85,7 +96,7 @@ impl<'s> LineParser<'s> {
                     }
                     _ => {} // we don't escape at all normal chars
                 }
-            } else if char=='\\' {
+            } else if char == '\\' {
                 after_antislash = true;
                 continue;
             }
@@ -390,13 +401,11 @@ mod tests {
         );
     }
 
-    #[cfg(feature="escaping")]
+    #[cfg(feature = "escaping")]
     #[test]
     fn escapes() {
         assert_eq!(
-            Line::from(
-                "no \\*italic\\* here"
-            ),
+            Line::from("no \\*italic\\* here"),
             Line::new_paragraph(vec![
                 Compound::raw_str("no "),
                 Compound::raw_str("*italic"),
@@ -407,17 +416,11 @@ mod tests {
         // we're not losing the '\' when it's not escaping something
         // (only markdown modifiers can be escaped)
         assert_eq!(
-            Line::from(
-                "a\\bc\\"
-            ),
-            Line::new_paragraph(vec![
-                Compound::raw_str("a\\bc\\"),
-            ])
+            Line::from("a\\bc\\"),
+            Line::new_paragraph(vec![Compound::raw_str("a\\bc\\"),])
         );
         assert_eq!(
-            Line::from(
-                "*italic\\*and\\*still\\*italic*"
-            ),
+            Line::from("*italic\\*and\\*still\\*italic*"),
             Line::new_paragraph(vec![
                 Compound::raw_str("italic").italic(),
                 Compound::raw_str("*and").italic(),
@@ -426,7 +429,9 @@ mod tests {
             ])
         );
         assert_eq!(
-            Line::from("\\**Italic then **bold\\\\ and \\`italic `and some *code*`** and italic*\\*"),
+            Line::from(
+                "\\**Italic then **bold\\\\ and \\`italic `and some *code*`** and italic*\\*"
+            ),
             Line::new_paragraph(vec![
                 Compound::raw_str("*"),
                 Compound::raw_str("Italic then ").italic(),

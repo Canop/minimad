@@ -39,12 +39,20 @@ fn test_clean() {
         * item 2
     "#;
     assert_eq!(
-        parse_text(text, Options { clean_indentations: true, ..Default::default() }),
-        Text { lines: vec![
-            Line::from("bla bla bla"),
-            Line::from("* item 1"),
-            Line::from("* item 2"),
-        ]},
+        parse_text(
+            text,
+            Options {
+                clean_indentations: true,
+                ..Default::default()
+            }
+        ),
+        Text {
+            lines: vec![
+                Line::from("bla bla bla"),
+                Line::from("* item 1"),
+                Line::from("* item 2"),
+            ]
+        },
     );
 }
 
@@ -56,14 +64,12 @@ fn test_inline_code_continuation() {
         again` bla
     "#;
     // Without continuation
-    let options = Options::default()
-        .clean_indentations(true);
+    let options = Options::default().clean_indentations(true);
     assert_eq!(
         parse_text(md, options),
-        Text { lines: vec![
-            Line::from("bla bla `code"),
-            Line::from("again` bla"),
-        ]},
+        Text {
+            lines: vec![Line::from("bla bla `code"), Line::from("again` bla"),]
+        },
     );
     // With continuation
     let options = Options::default()
@@ -71,9 +77,8 @@ fn test_inline_code_continuation() {
         .continue_inline_code(true);
     assert_eq!(
         parse_text(md, options),
-        Text { lines: vec![
-            Line::from("bla bla `code`"),
-            Line::from("`again` bla"),
-        ]},
+        Text {
+            lines: vec![Line::from("bla bla `code`"), Line::from("`again` bla"),]
+        },
     );
 }

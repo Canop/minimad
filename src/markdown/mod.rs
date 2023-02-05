@@ -8,10 +8,19 @@ mod text;
 
 pub use {
     align::Alignment,
-    composite::{Composite, CompositeStyle},
+    composite::{
+        Composite,
+        CompositeStyle,
+    },
     compound::Compound,
     header::header_level,
-    line::{Line, MAX_HEADER_DEPTH},
-    tbl::{TableRow, TableRule},
+    line::{
+        Line,
+        MAX_HEADER_DEPTH,
+    },
+    tbl::{
+        TableRow,
+        TableRule,
+    },
     text::Text,
 };

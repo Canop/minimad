@@ -71,7 +71,10 @@ impl CellDef {
             align: Alignment::Unspecified,
         }
     }
-    pub fn align(mut self, align: Alignment) -> Self {
+    pub fn align(
+        mut self,
+        align: Alignment,
+    ) -> Self {
         self.align = align;
         self
     }
@@ -84,29 +87,44 @@ impl Col {
             format!("${{{}}}", var_name.as_ref().replace(' ', "-")),
         )
     }
-    pub fn new<H: Into<String>, C: Into<String>>(header_md: H, content_md: C) -> Self {
+    pub fn new<H: Into<String>, C: Into<String>>(
+        header_md: H,
+        content_md: C,
+    ) -> Self {
         Self {
             header: CellDef::new(header_md).align(Alignment::Center),
             content: CellDef::new(content_md),
         }
     }
-    pub fn align(mut self, align: Alignment) -> Self {
+    pub fn align(
+        mut self,
+        align: Alignment,
+    ) -> Self {
         self.header.align = align;
         self.content.align = align;
         self
     }
-    pub fn align_header(mut self, align: Alignment) -> Self {
+    pub fn align_header(
+        mut self,
+        align: Alignment,
+    ) -> Self {
         self.header.align = align;
         self
     }
-    pub fn align_content(mut self, align: Alignment) -> Self {
+    pub fn align_content(
+        mut self,
+        align: Alignment,
+    ) -> Self {
         self.content.align = align;
         self
     }
 }
 
 impl TableBuilder {
-    pub fn col(&mut self, col: Col) -> &mut Self {
+    pub fn col(
+        &mut self,
+        col: Col,
+    ) -> &mut Self {
         self.cols.push(col);
         self
     }
@@ -140,7 +158,6 @@ impl TableBuilder {
         md
     }
 }
-
 
 impl From<&TableBuilder> for String {
     fn from(tblbl: &TableBuilder) -> String {

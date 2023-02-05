@@ -62,4 +62,3 @@ pub fn lines(src: &str) -> Vec<&str> {
     }
     result_lines
 }
-

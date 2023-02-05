@@ -51,14 +51,21 @@ impl<'s> OwningTemplateExpander<'s> {
     /// When you don't call this method, the expanded text contains the
     /// original names like `${my_arg_name}` (which is useful when developing
     /// your filling code)
-    pub fn set_default<S: Into<String>>(&mut self, value: S) -> &mut Self {
+    pub fn set_default<S: Into<String>>(
+        &mut self,
+        value: S,
+    ) -> &mut Self {
         self.default_value = Some(value.into());
         self
     }
 
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
-    pub fn set<S: std::fmt::Display>(&mut self, name: &'s str, value: S) -> &mut Self {
+    pub fn set<S: std::fmt::Display>(
+        &mut self,
+        name: &'s str,
+        value: S,
+    ) -> &mut Self {
         self.ops.push(FillingOperation::Set {
             name,
             value: value.to_string(),
@@ -67,7 +74,11 @@ impl<'s> OwningTemplateExpander<'s> {
     }
 
     /// replace placeholders with name `name` with the given value, interpreted as markdown
-    pub fn set_md<S: Into<String>>(&mut self, name: &'s str, value: S) -> &mut Self {
+    pub fn set_md<S: Into<String>>(
+        &mut self,
+        name: &'s str,
+        value: S,
+    ) -> &mut Self {
         self.ops.push(FillingOperation::SetMD {
             name,
             value: value.into(),
@@ -77,7 +88,10 @@ impl<'s> OwningTemplateExpander<'s> {
 
     /// return a sub template expander. You can do set and set_md
     /// on the returned sub to fill an instance of the repeation section.
-    pub fn sub(&mut self, name: &'s str) -> &mut OwningSubTemplateExpander<'s> {
+    pub fn sub(
+        &mut self,
+        name: &'s str,
+    ) -> &mut OwningSubTemplateExpander<'s> {
         let idx = self.ops.len();
         self.ops.push(FillingOperation::Sub {
             name,
@@ -94,7 +108,11 @@ impl<'s> OwningTemplateExpander<'s> {
 
     /// replace a placeholder with several lines.
     /// This is mostly useful when the placeholder is a repeatable line (code, list item)
-    pub fn set_lines<S: Into<String>>(&mut self, name: &'s str, raw_lines: S) -> &mut Self {
+    pub fn set_lines<S: Into<String>>(
+        &mut self,
+        name: &'s str,
+        raw_lines: S,
+    ) -> &mut Self {
         self.ops.push(FillingOperation::SetLines {
             name,
             value: raw_lines.into(),
@@ -103,7 +121,11 @@ impl<'s> OwningTemplateExpander<'s> {
     }
 
     /// replace a placeholder with several lines interpreted as markdown
-    pub fn set_lines_md<S: Into<String>>(&mut self, name: &'s str, md: S) -> &mut Self {
+    pub fn set_lines_md<S: Into<String>>(
+        &mut self,
+        name: &'s str,
+        md: S,
+    ) -> &mut Self {
         self.ops.push(FillingOperation::SetLinesMD {
             name,
             value: md.into(),
@@ -112,7 +134,10 @@ impl<'s> OwningTemplateExpander<'s> {
     }
 
     /// build a text by applying the replacements to the initial template
-    pub fn expand<'t>(&'s self, template: &'t TextTemplate<'s>) -> Text<'s> {
+    pub fn expand<'t>(
+        &'s self,
+        template: &'t TextTemplate<'s>,
+    ) -> Text<'s> {
         let mut expander = template.expander();
         if let Some(s) = &self.default_value {
             expander.set_all(s);
@@ -156,7 +181,11 @@ impl<'s> OwningSubTemplateExpander<'s> {
     }
     /// replace placeholders with name `name` with the given value, non interpreted
     /// (i.e. stars, backquotes, etc. don't mess the styling defined by the template)
-    pub fn set<S: std::fmt::Display>(&mut self, name: &'s str, value: S) -> &mut Self {
+    pub fn set<S: std::fmt::Display>(
+        &mut self,
+        name: &'s str,
+        value: S,
+    ) -> &mut Self {
         self.ops.push(SubFillingOperation::Set {
             name,
             value: value.to_string(),
@@ -164,7 +193,11 @@ impl<'s> OwningSubTemplateExpander<'s> {
         self
     }
 
-    pub fn set_option<S: std::fmt::Display>(&mut self, name: &'s str, value: Option<S>) -> &mut Self {
+    pub fn set_option<S: std::fmt::Display>(
+        &mut self,
+        name: &'s str,
+        value: Option<S>,
+    ) -> &mut Self {
         if let Some(value) = value {
             self.ops.push(SubFillingOperation::Set {
                 name,
@@ -175,7 +208,11 @@ impl<'s> OwningSubTemplateExpander<'s> {
     }
 
     /// replace placeholders with name `name` with the given value, interpreted as markdown
-    pub fn set_md<S: Into<String>>(&mut self, name: &'s str, value: S) -> &mut Self {
+    pub fn set_md<S: Into<String>>(
+        &mut self,
+        name: &'s str,
+        value: S,
+    ) -> &mut Self {
         self.ops.push(SubFillingOperation::SetMD {
             name,
             value: value.into(),

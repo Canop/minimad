@@ -1,5 +1,7 @@
-use std::fmt::{self, Write};
-
+use std::fmt::{
+    self,
+    Write,
+};
 
 /// a Compound is a part of a line with a consistent styling.
 /// It can be part of word, several words, some inline code, or even the whole line.
@@ -26,12 +28,18 @@ impl<'s> Compound<'s> {
         }
     }
     /// change the content but keeps the style arguments
-    pub fn set_str(&mut self, src: &'s str) {
+    pub fn set_str(
+        &mut self,
+        src: &'s str,
+    ) {
         self.src = src;
     }
     /// change the attributes by taking the values from the other
     /// compound, keeping the str
-    pub fn set_attributes_from(&mut self, other: &Compound) {
+    pub fn set_attributes_from(
+        &mut self,
+        other: &Compound,
+    ) {
         self.bold = other.bold;
         self.italic = other.italic;
         self.code = other.code;
@@ -41,7 +49,11 @@ impl<'s> Compound<'s> {
     /// r_start is relative, that is 0 is the index of the first
     /// byte of this compound.
     #[inline(always)]
-    pub fn sub(&self, r_start: usize, r_end: usize) -> Compound<'s> {
+    pub fn sub(
+        &self,
+        r_start: usize,
+        r_end: usize,
+    ) -> Compound<'s> {
         Compound {
             src: &self.src[r_start..r_end],
             bold: self.bold,
@@ -57,7 +69,11 @@ impl<'s> Compound<'s> {
     /// The difference with `sub` is that this method is unicode
     /// aware and counts the chars instead of asking for the bytes
     #[inline(always)]
-    pub fn sub_chars(&self, r_start: usize, r_end: usize) -> Compound<'s> {
+    pub fn sub_chars(
+        &self,
+        r_start: usize,
+        r_end: usize,
+    ) -> Compound<'s> {
         let mut rb_start = 0;
         let mut rb_end = 0;
         for (char_idx, (byte_idx, _)) in self.as_str().char_indices().enumerate() {
@@ -78,7 +94,10 @@ impl<'s> Compound<'s> {
     /// r_start is relative, that is if you give 0 you get a clone of
     /// this compound
     #[inline(always)]
-    pub fn tail(&self, r_start: usize) -> Compound<'s> {
+    pub fn tail(
+        &self,
+        r_start: usize,
+    ) -> Compound<'s> {
         Compound {
             src: &self.src[r_start..],
             bold: self.bold,
@@ -94,7 +113,10 @@ impl<'s> Compound<'s> {
     /// The difference with `tail` is that this method is unicode
     /// aware and counts the chars instead of asking for the bytes
     #[inline(always)]
-    pub fn tail_chars(&self, r_start: usize) -> Compound<'s> {
+    pub fn tail_chars(
+        &self,
+        r_start: usize,
+    ) -> Compound<'s> {
         let mut rb_start = 0;
         for (char_idx, (byte_idx, _)) in self.as_str().char_indices().enumerate() {
             rb_start = byte_idx;
@@ -107,7 +129,10 @@ impl<'s> Compound<'s> {
 
     // shortens this compound by `tail_size` bytes and returns the tail
     // as another compound
-    pub fn cut_tail(&mut self, tail_size: usize) -> Compound<'s> {
+    pub fn cut_tail(
+        &mut self,
+        tail_size: usize,
+    ) -> Compound<'s> {
         let cut = self.src.len() - tail_size;
         let tail = Compound {
             src: &self.src[cut..],
@@ -123,7 +148,11 @@ impl<'s> Compound<'s> {
     // make a raw unstyled compound from part of a string
     // Involves no parsing
     #[inline(always)]
-    pub fn raw_part(src: &'s str, start: usize, end: usize) -> Compound<'s> {
+    pub fn raw_part(
+        src: &'s str,
+        start: usize,
+        end: usize,
+    ) -> Compound<'s> {
         Compound {
             src: &src[start..end],
             bold: false,
@@ -171,19 +200,31 @@ impl<'s> Compound<'s> {
         self
     }
     #[inline(always)]
-    pub fn set_bold(&mut self, bold: bool) {
+    pub fn set_bold(
+        &mut self,
+        bold: bool,
+    ) {
         self.bold = bold;
     }
     #[inline(always)]
-    pub fn set_italic(&mut self, italic: bool) {
+    pub fn set_italic(
+        &mut self,
+        italic: bool,
+    ) {
         self.italic = italic;
     }
     #[inline(always)]
-    pub fn set_code(&mut self, code: bool) {
+    pub fn set_code(
+        &mut self,
+        code: bool,
+    ) {
         self.code = code;
     }
     #[inline(always)]
-    pub fn set_strikeout(&mut self, strikeout: bool) {
+    pub fn set_strikeout(
+        &mut self,
+        strikeout: bool,
+    ) {
         self.strikeout = strikeout;
     }
     #[inline(always)]
@@ -201,14 +242,20 @@ impl<'s> Compound<'s> {
 }
 
 impl fmt::Display for Compound<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         f.write_str(self.as_str())?;
         Ok(())
     }
 }
 
 impl fmt::Debug for Compound<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         if self.bold {
             f.write_char('B')?;
         }

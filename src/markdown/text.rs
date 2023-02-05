@@ -28,4 +28,3 @@ impl<'s> Text<'s> {
         crate::parser::parse_lines(md_lines, Options::default())
     }
 }
-
