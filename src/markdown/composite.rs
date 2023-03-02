@@ -7,7 +7,7 @@ use crate::*;
 pub enum CompositeStyle {
     Paragraph,
     Header(u8), // never 0, and <= MAX_HEADER_DEPTH
-    ListItem,
+    ListItem(u8), // can't be built > 3 by parsing
     Code,
     Quote,
 }

@@ -188,7 +188,16 @@ impl<'s> LineParser<'s> {
             self.idx += 1;
             let style = if self.src[self.idx..].starts_with("* ") {
                 self.idx += 2;
-                CompositeStyle::ListItem
+                CompositeStyle::ListItem(0)
+            } else if self.src[self.idx..].starts_with(" * ") {
+                self.idx += 3;
+                CompositeStyle::ListItem(1)
+            } else if self.src[self.idx..].starts_with("  * ") {
+                self.idx += 4;
+                CompositeStyle::ListItem(2)
+            } else if self.src[self.idx..].starts_with("   * ") {
+                self.idx += 5;
+                CompositeStyle::ListItem(3)
             } else if self.src[self.idx..].starts_with("> ") {
                 self.idx += 2;
                 CompositeStyle::Quote
@@ -246,7 +255,19 @@ impl<'s> LineParser<'s> {
         }
         if self.src.starts_with("* ") {
             self.idx = 2;
-            return Line::new_list_item(self.parse_compounds(false));
+            return Line::new_list_item(0, self.parse_compounds(false));
+        }
+        if self.src.starts_with(" * ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+        if self.src.starts_with("  * ") {
+            self.idx = 4;
+            return Line::new_list_item(2, self.parse_compounds(false));
+        }
+        if self.src.starts_with("   * ") {
+            self.idx = 5;
+            return Line::new_list_item(3, self.parse_compounds(false));
         }
         if self.src == ">" {
             return Line::new_quote(Vec::new());
@@ -473,10 +494,38 @@ mod tests {
     fn list_item() {
         assert_eq!(
             Line::from("* *list* item"),
-            Line::new_list_item(vec![
+            Line::new_list_item(0, vec![
                 Compound::raw_str("list").italic(),
                 Compound::raw_str(" item"),
             ])
+        );
+    }
+
+    #[test]
+    fn deep_list_items() {
+        assert_eq!(
+            Line::from(" * *list* item"),
+            Line::new_list_item(1, vec![
+                Compound::raw_str("list").italic(),
+                Compound::raw_str(" item"),
+            ])
+        );
+        assert_eq!(
+            Line::from("  * deeper"),
+            Line::new_list_item(2, vec![
+                Compound::raw_str("deeper"),
+            ])
+        );
+        assert_eq!(
+            Line::from("   * even **deeper**"),
+            Line::new_list_item(3, vec![
+                Compound::raw_str("even "),
+                Compound::raw_str("deeper").bold(),
+            ])
+        );
+        assert_eq!(
+            Line::from("    * but not this one..."),
+            Line::new_code(Compound::raw_str("* but not this one...").code()),
         );
     }
 

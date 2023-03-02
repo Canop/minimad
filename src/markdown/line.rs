@@ -54,9 +54,9 @@ impl Line<'_> {
             compounds,
         })
     }
-    pub fn new_list_item(compounds: Vec<Compound<'_>>) -> Line<'_> {
+    pub fn new_list_item(depth: u8, compounds: Vec<Compound<'_>>) -> Line<'_> {
         Line::Normal(Composite {
-            style: CompositeStyle::ListItem,
+            style: CompositeStyle::ListItem(depth),
             compounds,
         })
     }
