@@ -12,9 +12,12 @@ pub enum Line<'a> {
     CodeFence(Composite<'a>),
 }
 
-impl Line<'_> {
-    pub fn from(md: &str) -> Line<'_> {
+impl<'a> Line<'a> {
+    pub fn from(md: &'a str) -> Self {
         parser::LineParser::from(md).line()
+    }
+    pub fn raw_str(s: &'a str) -> Self {
+        Self::Normal(Composite::raw_str(s))
     }
     #[inline(always)]
     pub fn char_length(&self) -> usize {
@@ -54,7 +57,10 @@ impl Line<'_> {
             compounds,
         })
     }
-    pub fn new_list_item(depth: u8, compounds: Vec<Compound<'_>>) -> Line<'_> {
+    pub fn new_list_item(
+        depth: u8,
+        compounds: Vec<Compound<'_>>,
+    ) -> Line<'_> {
         Line::Normal(Composite {
             style: CompositeStyle::ListItem(depth),
             compounds,

@@ -6,7 +6,7 @@ use crate::*;
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CompositeStyle {
     Paragraph,
-    Header(u8), // never 0, and <= MAX_HEADER_DEPTH
+    Header(u8),   // never 0, and <= MAX_HEADER_DEPTH
     ListItem(u8), // can't be built > 3 by parsing
     Code,
     Quote,
@@ -47,6 +47,12 @@ impl<'a> Composite<'a> {
     /// parse a monoline markdown snippet which isn't from a text.
     pub fn from_inline(md: &'a str) -> Composite<'a> {
         parser::LineParser::from(md).inline()
+    }
+    pub fn raw_str(s: &'a str) -> Composite<'a> {
+        Self {
+            style: CompositeStyle::Paragraph,
+            compounds: vec![Compound::raw_str(s)],
+        }
     }
     #[inline(always)]
     pub fn is_code(&self) -> bool {

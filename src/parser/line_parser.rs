@@ -494,10 +494,13 @@ mod tests {
     fn list_item() {
         assert_eq!(
             Line::from("* *list* item"),
-            Line::new_list_item(0, vec![
-                Compound::raw_str("list").italic(),
-                Compound::raw_str(" item"),
-            ])
+            Line::new_list_item(
+                0,
+                vec![
+                    Compound::raw_str("list").italic(),
+                    Compound::raw_str(" item"),
+                ]
+            )
         );
     }
 
@@ -505,23 +508,27 @@ mod tests {
     fn deep_list_items() {
         assert_eq!(
             Line::from(" * *list* item"),
-            Line::new_list_item(1, vec![
-                Compound::raw_str("list").italic(),
-                Compound::raw_str(" item"),
-            ])
+            Line::new_list_item(
+                1,
+                vec![
+                    Compound::raw_str("list").italic(),
+                    Compound::raw_str(" item"),
+                ]
+            )
         );
         assert_eq!(
             Line::from("  * deeper"),
-            Line::new_list_item(2, vec![
-                Compound::raw_str("deeper"),
-            ])
+            Line::new_list_item(2, vec![Compound::raw_str("deeper"),])
         );
         assert_eq!(
             Line::from("   * even **deeper**"),
-            Line::new_list_item(3, vec![
-                Compound::raw_str("even "),
-                Compound::raw_str("deeper").bold(),
-            ])
+            Line::new_list_item(
+                3,
+                vec![
+                    Compound::raw_str("even "),
+                    Compound::raw_str("deeper").bold(),
+                ]
+            )
         );
         assert_eq!(
             Line::from("    * but not this one..."),
