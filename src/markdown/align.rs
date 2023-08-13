@@ -1,16 +1,11 @@
 /// Left, Center, Right or Unspecified
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Default, Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Alignment {
+    #[default]
     Unspecified,
     Left,
     Center,
     Right,
-}
-
-impl Default for Alignment {
-    fn default() -> Self {
-        Alignment::Unspecified
-    }
 }
 
 impl Alignment {

@@ -23,8 +23,8 @@ fn indented_code_between_fences() {
         Text {
             lines: vec![
                 Line::new_paragraph(vec![Compound::raw_str("outside")]),
-                Line::new_code(Compound::raw_str("a").code()),
-                Line::new_code(Compound::raw_str("    b").code()),
+                Line::new_code(Compound::raw_str("a")),
+                Line::new_code(Compound::raw_str("    b")),
             ]
         },
     );
