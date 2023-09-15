@@ -202,7 +202,7 @@ impl<'s> TextTemplate<'s> {
         TextTemplateExpander::from(self)
     }
 
-    /// if the line `line_idx` is part of a template, return this
+    /// if the line `line_idx` is part of a sub template, return this
     /// template's index. Return None if it's not part of a template.
     ///
     /// This might be optimized by an internal vec in the future (or
