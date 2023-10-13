@@ -28,7 +28,7 @@ impl<'s> Text<'s> {
         crate::parser::parse_lines(md_lines, Options::default())
     }
     pub fn raw_str(s: &'s str) -> Self {
-        let lines = s.lines().map(|line| Line::raw_str(line)).collect();
+        let lines = s.lines().map(Line::raw_str).collect();
         Self { lines }
     }
 }

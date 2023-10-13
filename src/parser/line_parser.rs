@@ -50,11 +50,11 @@ impl<'s> LineParser<'s> {
         }
         self.idx = end + tag_length;
     }
-    fn code_compound_from_idx(
+    fn code_block_compound_from_idx(
         &self,
         idx: usize,
     ) -> Compound<'s> {
-        Compound::new(self.src, idx, self.src.len(), false, false, true, false)
+        Compound::new(self.src, idx, self.src.len(), false, false, false, false)
     }
     fn parse_compounds(
         &mut self,
@@ -231,7 +231,7 @@ impl<'s> LineParser<'s> {
             self.idx = 3;
             Line::new_code_fence(self.parse_compounds(false))
         } else {
-            Line::new_code(self.code_compound_from_idx(0))
+            Line::new_code(self.code_block_compound_from_idx(0))
         }
     }
     pub fn line(mut self) -> Line<'s> {
@@ -248,10 +248,10 @@ impl<'s> LineParser<'s> {
             };
         }
         if self.src.starts_with("    ") {
-            return Line::new_code(self.code_compound_from_idx(4));
+            return Line::new_code(self.code_block_compound_from_idx(4));
         }
         if self.src.starts_with('\t') {
-            return Line::new_code(self.code_compound_from_idx(1));
+            return Line::new_code(self.code_block_compound_from_idx(1));
         }
         if self.src.starts_with("* ") {
             self.idx = 2;
@@ -467,7 +467,7 @@ mod tests {
 
     #[test]
     fn code_fence() {
-        assert_eq!(Line::from("```"), Line::new_code_fence(vec![]),);
+        assert_eq!(Line::from("```"), Line::new_code_fence(vec![]));
         assert_eq!(
             Line::from("```rust"),
             Line::new_code_fence(vec![Compound::raw_str("rust"),]),
@@ -478,7 +478,7 @@ mod tests {
     fn line_of_code() {
         assert_eq!(
             Line::from("    let r = Math.sin(π/2) * 7"),
-            Line::new_code(Compound::raw_str("let r = Math.sin(π/2) * 7").code(),)
+            Line::new_code(Compound::raw_str("let r = Math.sin(π/2) * 7"))
         );
     }
 
@@ -532,7 +532,7 @@ mod tests {
         );
         assert_eq!(
             Line::from("    * but not this one..."),
-            Line::new_code(Compound::raw_str("* but not this one...").code()),
+            Line::new_code(Compound::raw_str("* but not this one...")),
         );
     }
 
