@@ -4,8 +4,8 @@ mod tbl_builder;
 mod text_template;
 
 pub use {
-    inline_template::InlineTemplate,
-    owning_template_expander::OwningTemplateExpander,
+    inline_template::*,
+    owning_template_expander::*,
     tbl_builder::*,
     text_template::{
         SubTemplateExpander,
