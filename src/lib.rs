@@ -83,7 +83,7 @@ pub fn parse_line(md: &str) -> Line<'_> {
 }
 
 /// parse a monoline markdown snippet which isn't from a text.
-/// Don't produce some types of line: TableRow, Code, ListItem
+/// Don't produce some types of line: `TableRow`, `Code`, `ListItem`
 ///  as they only make sense in a multi-line text.
 pub fn parse_inline(md: &str) -> Composite<'_> {
     Composite::from_inline(md)

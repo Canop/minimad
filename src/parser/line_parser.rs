@@ -7,7 +7,7 @@ use crate::*;
 ///   using `Text::from`
 /// * `inline` parses a snippet which isn't supposed to be part of a markdown text.
 ///   Some types of lines aren't produced this ways as they don't make sense out of
-///   a text: ListItem, TableRow, Code.
+///   a text: `ListItem`, `TableRow`, `Code`.
 ///
 /// Normally not used directly but though `line::from(str)`
 #[derive(Debug)]

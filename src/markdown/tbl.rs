@@ -10,7 +10,7 @@ pub struct TableRule {
     pub cells: Vec<Alignment>,
 }
 
-impl<'a> TableRow<'a> {
+impl TableRow<'_> {
     /// Try to read the cells as formatting cells
     ///
     /// (i.e. like `|:-:|-:|:-----|`)

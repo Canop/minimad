@@ -54,15 +54,12 @@ impl<'a> Composite<'a> {
             compounds: vec![Compound::raw_str(s)],
         }
     }
-    #[inline(always)]
     pub fn is_code(&self) -> bool {
         matches!(self.style, CompositeStyle::Code)
     }
-    #[inline(always)]
     pub fn is_list_item(&self) -> bool {
         matches!(self.style, CompositeStyle::ListItem { .. })
     }
-    #[inline(always)]
     pub fn is_quote(&self) -> bool {
         matches!(self.style, CompositeStyle::Quote)
     }
@@ -142,10 +139,9 @@ impl<'a> Composite<'a> {
             if compound_len > to_remove {
                 self.compounds[0] = self.compounds[0].tail_chars(to_remove);
                 return;
-            } else {
-                self.compounds.remove(0);
-                to_remove -= compound_len;
             }
+            self.compounds.remove(0);
+            to_remove -= compound_len;
         }
     }
     /// remove characters, and whole compounds if necessary
@@ -162,10 +158,9 @@ impl<'a> Composite<'a> {
             if compound_len > to_remove {
                 self.compounds[compound_idx] = self.compounds[compound_idx].sub_chars(0, to_remove);
                 return;
-            } else {
-                self.compounds.remove(compound_idx);
-                to_remove -= compound_len;
             }
+            self.compounds.remove(compound_idx);
+            to_remove -= compound_len;
         }
     }
 

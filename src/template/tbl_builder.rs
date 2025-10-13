@@ -31,7 +31,7 @@ pub struct Col {
 /// |-:
 /// "#;
 /// ```
-/// ### with a table_builder:
+/// ### with a `table_builder`:
 ///
 /// ```
 ///  use minimad::{*, Alignment::*};

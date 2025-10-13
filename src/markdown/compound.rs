@@ -17,7 +17,6 @@ pub struct Compound<'s> {
 impl<'s> Compound<'s> {
     /// make a raw unstyled compound
     /// Involves no parsing
-    #[inline(always)]
     pub fn raw_str(src: &'s str) -> Compound<'s> {
         Compound {
             src,

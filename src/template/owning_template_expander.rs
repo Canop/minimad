@@ -86,7 +86,7 @@ impl<'s> OwningTemplateExpander<'s> {
         self
     }
 
-    /// return a sub template expander. You can do set and set_md
+    /// return a sub template expander. You can do set and `set_md`
     /// on the returned sub to fill an instance of the repeation section.
     pub fn sub(
         &mut self,

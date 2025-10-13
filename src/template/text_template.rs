@@ -186,7 +186,7 @@ impl<'s> From<&'s str> for TextTemplate<'s> {
                 _ => {
                     text.lines.push(line);
                 }
-            };
+            }
         }
         TextTemplate {
             text,
@@ -505,7 +505,7 @@ impl<'s, 'b> TextTemplateExpander<'s, 'b> {
             for idx in start..end {
                 self.lines_to_exclude[idx] = true;
             }
-            for sub_expansion in self.sub_expansions.iter() {
+            for sub_expansion in &self.sub_expansions {
                 if sub_expansion.name != sub_template.name {
                     continue;
                 }
