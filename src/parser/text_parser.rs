@@ -57,6 +57,9 @@ where
         match line {
             Line::CodeFence(..) => {
                 between_fences = !between_fences;
+                if options.keep_code_fences {
+                    lines.push(line);
+                }
             }
             _ => {
                 lines.push(line);

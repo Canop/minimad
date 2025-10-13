@@ -31,7 +31,7 @@ assert_eq!(
 );
 ```
 
-The [mad_inline] macro is useful for semi-dynamic markdown building: it prevents characters like `'*'` from messing the style:
+The [`mad_inline`] macro is useful for semi-dynamic markdown building: it prevents characters like `'*'` from messing the style:
 
 ```
 use minimad::*;
@@ -71,20 +71,20 @@ pub use once_cell;
 pub fn parse_text(
     md: &str,
     options: Options,
-) -> Text {
+) -> Text<'_> {
     parser::parse(md, options)
 }
 
 /// parse a line, which is meant to be part of a markdown text.
 /// This function shouldn't usually be used: if you don't want
 /// a text you probably need `parse_inline`
-pub fn parse_line(md: &str) -> Line {
+pub fn parse_line(md: &str) -> Line<'_> {
     Line::from(md)
 }
 
 /// parse a monoline markdown snippet which isn't from a text.
 /// Don't produce some types of line: TableRow, Code, ListItem
 ///  as they only make sense in a multi-line text.
-pub fn parse_inline(md: &str) -> Composite {
+pub fn parse_inline(md: &str) -> Composite<'_> {
     Composite::from_inline(md)
 }

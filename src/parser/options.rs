@@ -28,6 +28,7 @@ pub struct Options {
     pub continue_italic: bool,
     pub continue_bold: bool,
     pub continue_strikeout: bool,
+    pub keep_code_fences: bool,
 }
 
 #[allow(clippy::derivable_impls)]
@@ -39,6 +40,7 @@ impl Default for Options {
             continue_italic: false,
             continue_bold: false,
             continue_strikeout: false,
+            keep_code_fences: false,
         }
     }
 }
@@ -87,6 +89,13 @@ impl Options {
         self.continue_italic = value;
         self.continue_bold = value;
         self.continue_strikeout = value;
+        self
+    }
+    pub fn keep_code_fences(
+        mut self,
+        value: bool,
+    ) -> Self {
+        self.keep_code_fences = value;
         self
     }
 }

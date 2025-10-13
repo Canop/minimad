@@ -19,7 +19,6 @@ impl<'a> Line<'a> {
     pub fn raw_str(s: &'a str) -> Self {
         Self::Normal(Composite::raw_str(s))
     }
-    #[inline(always)]
     pub fn char_length(&self) -> usize {
         match self {
             Line::Normal(composite) => composite.char_length(),
@@ -81,11 +80,9 @@ impl<'a> Line<'a> {
     pub fn new_table_alignments(cells: Vec<Alignment>) -> Line<'static> {
         Line::TableRule(TableRule { cells })
     }
-    #[inline(always)]
     pub fn is_table_row(&self) -> bool {
         matches!(self, Line::TableRow(_))
     }
-    #[inline(always)]
     #[allow(clippy::match_like_matches_macro)]
     pub fn is_table_part(&self) -> bool {
         match self {
@@ -98,6 +95,15 @@ impl<'a> Line<'a> {
         match self {
             Line::Normal(composite) => composite.is_code(),
             _ => false,
+        }
+    }
+    pub fn code_fence_lang(&self) -> Option<&str> {
+        match self {
+            Line::CodeFence(composite) => {
+                let first = composite.compounds.first()?;
+                Some(first.src)
+            }
+            _ => None,
         }
     }
 }

@@ -56,7 +56,7 @@ impl<'a> Composite<'a> {
     }
     #[inline(always)]
     pub fn is_code(&self) -> bool {
-        matches!(self.style, CompositeStyle::Code { .. })
+        matches!(self.style, CompositeStyle::Code)
     }
     #[inline(always)]
     pub fn is_list_item(&self) -> bool {
@@ -64,7 +64,7 @@ impl<'a> Composite<'a> {
     }
     #[inline(always)]
     pub fn is_quote(&self) -> bool {
-        matches!(self.style, CompositeStyle::Quote { .. })
+        matches!(self.style, CompositeStyle::Quote)
     }
     /// return the total number of characters in the composite
     ///
@@ -76,7 +76,6 @@ impl<'a> Composite<'a> {
     /// This may not be the visible width: a renderer can
     ///  add some things (maybe some caracters) to wrap inline code,
     ///  or a bullet in front of a list item
-    #[inline(always)]
     pub fn char_length(&self) -> usize {
         self.compounds
             .iter()
