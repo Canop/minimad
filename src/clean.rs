@@ -17,6 +17,7 @@ pub fn is_blank(s: &str) -> bool {
 /// assert_eq!(lines[1], "    hop");
 /// assert_eq!(lines[2], "hip");
 /// ```
+#[must_use]
 pub fn lines(src: &str) -> Vec<&str> {
     let mut result_lines: Vec<&str> = Vec::new();
     let mut src_lines = src.lines();

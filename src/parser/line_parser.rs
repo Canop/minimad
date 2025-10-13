@@ -1,13 +1,13 @@
 use crate::*;
 
 /// The structure parsing a line or part of a line.
-/// A LineParser initialized from a markdown string exposes 2 main methods:
+/// A `LineParser` initialized from a markdown string exposes 2 main methods:
 /// * `line` parses a line which is supposed to be part of a markdown text. This
-///       method shouln't really be used externally: a text can be parsed in a whole
-///       using `Text::from`
+///   method shouln't really be used externally: a text can be parsed in a whole
+///   using `Text::from`
 /// * `inline` parses a snippet which isn't supposed to be part of a markdown text.
-///       Some types of lines aren't produced this ways as they don't make sense out of
-///       a text: ListItem, TableRow, Code.
+///   Some types of lines aren't produced this ways as they don't make sense out of
+///   a text: ListItem, TableRow, Code.
 ///
 /// Normally not used directly but though `line::from(str)`
 #[derive(Debug)]
@@ -21,7 +21,7 @@ pub struct LineParser<'s> {
 }
 
 impl<'s> LineParser<'s> {
-    pub fn from(src: &'s str) -> LineParser<'_> {
+    pub fn from(src: &'s str) -> LineParser<'s> {
         LineParser {
             src,
             idx: 0,

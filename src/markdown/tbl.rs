@@ -12,14 +12,16 @@ pub struct TableRule {
 
 impl<'a> TableRow<'a> {
     /// Try to read the cells as formatting cells
-    /// (i.e. like `|:-:|-:|:-----|`
+    ///
+    /// (i.e. like `|:-:|-:|:-----|`)
+    ///
     /// Implementation note:
     ///  it could me more efficiently be tested during initial
     ///  reading but I don't really want to duplicate the code
-    ///  of line_parser::parse_compounds until everything is
+    ///  of `line_parser::parse_compounds` until everything is
     ///  stabilized. If it proves necessary I'll do a
-    ///  line_parser::parse_cell (and parse_compound won't take
-    ///  a bool paramater anymore).
+    ///  `line_parser::parse_cell` (and `parse_compound` won't take
+    ///  a `bool` parameter anymore).
     pub fn as_table_alignments(&self) -> Option<TableRule> {
         let mut formats = TableRule { cells: Vec::new() };
         for cell in &self.cells {

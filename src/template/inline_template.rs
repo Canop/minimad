@@ -94,9 +94,9 @@ impl<'a> InlineTemplate<'a> {
 ///
 /// Differences with parsing a string built with `format!`:
 /// * the arguments aren't interpreted as markdown, which is convenient to insert user supplied
-/// strings in a markdown template.
+///   strings in a markdown template.
 /// * markdown parsing and template building are done only once (the template is stored in a lazy
-/// static)
+///   static)
 /// * arguments can be omited, repeated, or given in arbitrary order
 /// * no support for fmt parameters or arguments other than `&str`
 ///
