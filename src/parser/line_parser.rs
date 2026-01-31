@@ -227,8 +227,9 @@ impl<'s> LineParser<'s> {
     /// should be called when the line must be interpreted as a code part,
     /// for example between code fences
     pub fn as_code(mut self) -> Line<'s> {
-        if self.src.starts_with("```") {
-            self.idx = 3;
+        if self.src.trim_start().starts_with("```") {
+            let start = self.src.len() - self.src.trim_start().len();
+            self.idx = start + 3;
             Line::new_code_fence(self.parse_compounds(false))
         } else {
             Line::new_code(self.code_block_compound_from_idx(0))
@@ -276,8 +277,9 @@ impl<'s> LineParser<'s> {
             self.idx = 2;
             return Line::new_quote(self.parse_compounds(false));
         }
-        if self.src.starts_with("```") {
-            self.idx = 3;
+        if self.src.trim_start().starts_with("```") {
+            let start = self.src.len() - self.src.trim_start().len();
+            self.idx = start + 3;
             return Line::new_code_fence(self.parse_compounds(false));
         }
         let header_level = header_level(self.src);
@@ -612,6 +614,26 @@ mod tests {
                 Alignment::Center,
                 Alignment::Right,
             ])
+        );
+    }
+
+    #[test]
+    fn indented_code_fence() {
+        // Test that code fences with leading spaces are recognized
+        assert_eq!(Line::from("   ```"), Line::new_code_fence(vec![]));
+        assert_eq!(
+            Line::from("   ```python"),
+            Line::new_code_fence(vec![Compound::raw_str("python")])
+        );
+        assert_eq!(
+            Line::from("  ```rust"),
+            Line::new_code_fence(vec![Compound::raw_str("rust")])
+        );
+        assert_eq!(Line::from(" ```"), Line::new_code_fence(vec![]));
+        // Ensure 4 spaces still triggers indented code block, not fence
+        assert_eq!(
+            Line::from("    ```"),
+            Line::new_code(Compound::raw_str("```"))
         );
     }
 }
