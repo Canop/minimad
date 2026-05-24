@@ -48,14 +48,16 @@ impl<'s> LineParser<'s> {
                 self.strikeout,
             ));
         }
-        self.idx = end + tag_length;
+        self.idx = (end + tag_length).min(self.src.len());
     }
+
     fn code_block_compound_from_idx(
         &self,
         idx: usize,
     ) -> Compound<'s> {
         Compound::new(self.src, idx, self.src.len(), false, false, false, false)
     }
+
     fn parse_compounds(
         &mut self,
         stop_on_pipe: bool,
@@ -237,7 +239,14 @@ impl<'s> LineParser<'s> {
     pub fn line(mut self) -> Line<'s> {
         self.parse_line()
     }
-    pub(crate) fn parse_line(&mut self) -> Line<'s> {
+
+    /// Parse a line with context about list nesting
+    pub(crate) fn parse_line_with_context(
+        &mut self,
+        list_marker_info: Option<&crate::parser::text_parser::ListMarkerInfo>,
+        calculated_depth: u8,
+    ) -> Line<'s> {
+        // First check for code fences and tables which don't depend on context
         if self.src.starts_with('|') {
             let tr = TableRow {
                 cells: self.parse_cells(),
@@ -247,11 +256,104 @@ impl<'s> LineParser<'s> {
                 None => Line::TableRow(tr),
             };
         }
+
+        // Check for quote lines
+        if self.src.starts_with("> ") || self.src == ">" {
+            if self.src.starts_with("> ") {
+                self.idx = 2;
+            }
+            return Line::new_quote(self.parse_compounds(false));
+        }
+
+        // Check for code fences
+        if self.src.starts_with("```") {
+            self.idx = 3;
+            return Line::new_code_fence(self.parse_compounds(false));
+        }
+
+        // Check for list markers (prioritize when we have context)
+        if let Some(info) = list_marker_info {
+            // Use the pre-calculated depth from the text parser
+            let depth = calculated_depth;
+
+            // Set index based on marker position using byte offset
+            let marker_and_space = info.marker_width as usize;
+            self.idx = (info.byte_offset as usize + marker_and_space).min(self.src.len());
+
+            return Line::new_list_item(depth, self.parse_compounds(false));
+        }
+
+        // Check for code blocks (4 spaces or tab) - only if no list marker was found
         if self.src.starts_with("    ") {
             return Line::new_code(self.code_block_compound_from_idx(4));
         }
+
+        // Check for tab-indented code block (not followed by list marker)
         if self.src.starts_with('\t') {
+            let rest = &self.src[1..];
+            if !rest.starts_with("- ") && !rest.starts_with("* ") && !rest.starts_with("+ ") {
+                return Line::new_code(self.code_block_compound_from_idx(1));
+            }
+        }
+
+        // Check for tab-indented lists (CommonMark: tab at start followed by list marker)
+        if self.src.starts_with("\t- ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+        if self.src.starts_with("\t* ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+        if self.src.starts_with("\t+ ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+
+        // Fall back to the original parse_line for other cases
+        self.parse_line_fallback()
+    }
+
+    /// Fallback method that contains the original hardcoded space-counting logic
+    fn parse_line_fallback(&mut self) -> Line<'s> {
+        // Reset state
+        self.idx = 0;
+
+        // Tables first
+        if self.src.starts_with('|') {
+            let tr = TableRow {
+                cells: self.parse_cells(),
+            };
+            return match tr.as_table_alignments() {
+                Some(aligns) => Line::TableRule(aligns),
+                None => Line::TableRow(tr),
+            };
+        }
+
+        // Code block: 4 spaces
+        if self.src.starts_with("    ") {
+            return Line::new_code(self.code_block_compound_from_idx(4));
+        }
+        // Code block: tab not followed by list marker
+        if self.src.starts_with('\t')
+            && !self.src[1..].starts_with("- ")
+            && !self.src[1..].starts_with("* ")
+            && !self.src[1..].starts_with("+ ")
+        {
             return Line::new_code(self.code_block_compound_from_idx(1));
+        }
+        // Support tab-indented lists (CommonMark: tab at start followed by list marker)
+        if self.src.starts_with("\t- ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+        if self.src.starts_with("\t* ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+        if self.src.starts_with("\t+ ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
         }
         if self.src.starts_with("* ") {
             self.idx = 2;
@@ -266,6 +368,39 @@ impl<'s> LineParser<'s> {
             return Line::new_list_item(2, self.parse_compounds(false));
         }
         if self.src.starts_with("   * ") {
+            self.idx = 5;
+            return Line::new_list_item(3, self.parse_compounds(false));
+        }
+        // Support dash (-) and plus (+) list markers
+        if self.src.starts_with("- ") {
+            self.idx = 2;
+            return Line::new_list_item(0, self.parse_compounds(false));
+        }
+        if self.src.starts_with(" - ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+        if self.src.starts_with("  - ") {
+            self.idx = 4;
+            return Line::new_list_item(2, self.parse_compounds(false));
+        }
+        if self.src.starts_with("   - ") {
+            self.idx = 5;
+            return Line::new_list_item(3, self.parse_compounds(false));
+        }
+        if self.src.starts_with("+") {
+            self.idx = 2;
+            return Line::new_list_item(0, self.parse_compounds(false));
+        }
+        if self.src.starts_with(" + ") {
+            self.idx = 3;
+            return Line::new_list_item(1, self.parse_compounds(false));
+        }
+        if self.src.starts_with("  + ") {
+            self.idx = 4;
+            return Line::new_list_item(2, self.parse_compounds(false));
+        }
+        if self.src.starts_with("   + ") {
             self.idx = 5;
             return Line::new_list_item(3, self.parse_compounds(false));
         }
@@ -291,6 +426,11 @@ impl<'s> LineParser<'s> {
         } else {
             Line::new_paragraph(compounds)
         }
+    }
+
+    /// Original parse_line method - delegates to fallback
+    pub(crate) fn parse_line(&mut self) -> Line<'s> {
+        self.parse_line_fallback()
     }
 }
 

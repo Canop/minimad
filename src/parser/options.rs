@@ -3,7 +3,7 @@
 pub struct Options {
     /// Remove one or several superfluous levels of indentations
     ///
-    /// This is useful when your text is too deeply intended, for
+    /// This is useful when your text is too deeply indented, for
     /// example because it's defined in a raw literal:
     ///
     /// ```

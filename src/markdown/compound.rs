@@ -1,7 +1,4 @@
-use std::fmt::{
-    self,
-    Write,
-};
+use std::fmt::{self, Write};
 
 /// a Compound is a part of a line with a consistent styling.
 /// It can be part of word, several words, some inline code, or even the whole line.
@@ -165,7 +162,8 @@ impl<'s> Compound<'s> {
         strikeout: bool,
     ) -> Compound<'s> {
         Compound {
-            src: &src[start..end],
+            // Ensure indices are within bounds
+            src: src.get(start..end).unwrap_or(""),
             italic,
             bold,
             code,
