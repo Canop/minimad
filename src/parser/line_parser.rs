@@ -186,18 +186,15 @@ impl<'s> LineParser<'s> {
         let mut cells = Vec::new();
         while self.idx < self.src.len() {
             self.idx += 1;
-            let style = if self.src[self.idx..].starts_with("* ") {
-                self.idx += 2;
-                CompositeStyle::ListItem(0)
-            } else if self.src[self.idx..].starts_with(" * ") {
-                self.idx += 3;
-                CompositeStyle::ListItem(1)
-            } else if self.src[self.idx..].starts_with("  * ") {
-                self.idx += 4;
-                CompositeStyle::ListItem(2)
-            } else if self.src[self.idx..].starts_with("   * ") {
-                self.idx += 5;
-                CompositeStyle::ListItem(3)
+            let style = if let Some((depth, consumed, is_ordered)) =
+                list_item_prefix(&self.src[self.idx..])
+            {
+                self.idx += consumed;
+                if is_ordered {
+                    CompositeStyle::OrderedListItem(depth)
+                } else {
+                    CompositeStyle::ListItem(depth)
+                }
             } else if self.src[self.idx..].starts_with("> ") {
                 self.idx += 2;
                 CompositeStyle::Quote
@@ -253,21 +250,14 @@ impl<'s> LineParser<'s> {
         if self.src.starts_with('\t') {
             return Line::new_code(self.code_block_compound_from_idx(1));
         }
-        if self.src.starts_with("* ") {
-            self.idx = 2;
-            return Line::new_list_item(0, self.parse_compounds(false));
-        }
-        if self.src.starts_with(" * ") {
-            self.idx = 3;
-            return Line::new_list_item(1, self.parse_compounds(false));
-        }
-        if self.src.starts_with("  * ") {
-            self.idx = 4;
-            return Line::new_list_item(2, self.parse_compounds(false));
-        }
-        if self.src.starts_with("   * ") {
-            self.idx = 5;
-            return Line::new_list_item(3, self.parse_compounds(false));
+        if let Some((depth, consumed, is_ordered)) = list_item_prefix(self.src) {
+            self.idx = consumed;
+            let compounds = self.parse_compounds(false);
+            return if is_ordered {
+                Line::new_ordered_list_item(depth, compounds)
+            } else {
+                Line::new_list_item(depth, compounds)
+            };
         }
         if self.src == ">" {
             return Line::new_quote(Vec::new());
@@ -310,6 +300,46 @@ fn compounds_are_rule(compounds: &[Compound<'_>]) -> bool {
         }
     }
     true
+}
+
+/// If the line starts with a list item marker (0-3 leading spaces followed by
+/// `* `, `- `, `+ `, or `<digits>. `/`<digits>) `), return the depth, the
+/// number of bytes consumed by the whole prefix, and whether it is an ordered
+/// marker.
+fn list_item_prefix(s: &str) -> Option<(u8, usize, bool)> {
+    let bytes = s.as_bytes();
+    let mut depth = 0;
+    while depth < bytes.len() && bytes[depth] == b' ' {
+        depth += 1;
+    }
+    if depth >= 4 {
+        return None;
+    }
+    let rest = &s[depth..];
+
+    // unordered
+    if rest.starts_with("* ") || rest.starts_with("- ") || rest.starts_with("+ ") {
+        return Some((depth as u8, depth + 2, false));
+    }
+
+    // ordered
+    let mut i = 0;
+    while i < rest.len() && rest.as_bytes()[i].is_ascii_digit() {
+        i += 1;
+    }
+    if i == 0 {
+        return None;
+    }
+    if matches!(rest.as_bytes().get(i), Some(b'.') | Some(b')')) {
+        if i + 1 == rest.len() {
+            return Some((depth as u8, depth + i + 1, true));
+        }
+        if rest.as_bytes()[i + 1] == b' ' {
+            return Some((depth as u8, depth + i + 2, true));
+        }
+    }
+
+    None
 }
 
 /// Tests of line parsing
@@ -533,6 +563,47 @@ mod tests {
         assert_eq!(
             Line::from("    * but not this one..."),
             Line::new_code(Compound::raw_str("* but not this one...")),
+        );
+    }
+
+    #[test]
+    fn dash_and_plus_items() {
+        assert_eq!(
+            Line::from("- dash item"),
+            Line::new_list_item(0, vec![Compound::raw_str("dash item"),])
+        );
+        assert_eq!(
+            Line::from(" + plus item"),
+            Line::new_list_item(1, vec![Compound::raw_str("plus item"),])
+        );
+        assert_eq!(
+            Line::from("  - deeper dash"),
+            Line::new_list_item(2, vec![Compound::raw_str("deeper dash"),])
+        );
+        // line starting with "-" but not a marker stays a paragraph
+        assert_eq!(
+            Line::from("-not a list item"),
+            Line::new_paragraph(vec![Compound::raw_str("-not a list item"),])
+        );
+    }
+
+    #[test]
+    fn ordered_items() {
+        assert_eq!(
+            Line::from("1. ordered item"),
+            Line::new_ordered_list_item(0, vec![Compound::raw_str("ordered item"),])
+        );
+        assert_eq!(
+            Line::from("  2) ordered item"),
+            Line::new_ordered_list_item(2, vec![Compound::raw_str("ordered item"),])
+        );
+        assert_eq!(
+            Line::from("42. ordered item"),
+            Line::new_ordered_list_item(0, vec![Compound::raw_str("ordered item"),])
+        );
+        assert_eq!(
+            Line::from("1.5 not an item"),
+            Line::new_paragraph(vec![Compound::raw_str("1.5 not an item"),])
         );
     }
 

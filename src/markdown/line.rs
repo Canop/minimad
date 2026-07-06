@@ -65,6 +65,15 @@ impl<'a> Line<'a> {
             compounds,
         })
     }
+    pub fn new_ordered_list_item(
+        depth: u8,
+        compounds: Vec<Compound<'_>>,
+    ) -> Line<'_> {
+        Line::Normal(Composite {
+            style: CompositeStyle::OrderedListItem(depth),
+            compounds,
+        })
+    }
     pub fn new_header(
         level: u8,
         compounds: Vec<Compound<'_>>,
