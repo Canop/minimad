@@ -6,9 +6,13 @@ use crate::*;
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CompositeStyle {
     Paragraph,
-    Header(u8),          // never 0, and <= MAX_HEADER_DEPTH
-    ListItem(u8),        // can't be built > 3 by parsing: *, -, +
-    OrderedListItem(u8), // can't be built > 3 by parsing: 1., 1)
+    Header(u8), // never 0, and <= MAX_HEADER_DEPTH
+    ListItem(u8), // can't be built > 3 by parsing: *, -, +
+    OrderedListItem {
+        // can't be built > 3 by parsing: 1., 1)
+        level: u8,
+        index: u32,
+    },
     Code,
     Quote,
 }
@@ -61,7 +65,7 @@ impl<'a> Composite<'a> {
     pub fn is_list_item(&self) -> bool {
         matches!(
             self.style,
-            CompositeStyle::ListItem(_) | CompositeStyle::OrderedListItem(_)
+            CompositeStyle::ListItem(_) | CompositeStyle::OrderedListItem { .. }
         )
     }
     pub fn is_quote(&self) -> bool {

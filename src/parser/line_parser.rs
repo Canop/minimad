@@ -186,12 +186,12 @@ impl<'s> LineParser<'s> {
         let mut cells = Vec::new();
         while self.idx < self.src.len() {
             self.idx += 1;
-            let style = if let Some((depth, consumed, is_ordered)) =
+            let style = if let Some((depth, consumed, ordered_index)) =
                 list_item_prefix(&self.src[self.idx..])
             {
                 self.idx += consumed;
-                if is_ordered {
-                    CompositeStyle::OrderedListItem(depth)
+                if let Some(index) = ordered_index {
+                    CompositeStyle::OrderedListItem { level: depth, index }
                 } else {
                     CompositeStyle::ListItem(depth)
                 }
@@ -250,11 +250,11 @@ impl<'s> LineParser<'s> {
         if self.src.starts_with('\t') {
             return Line::new_code(self.code_block_compound_from_idx(1));
         }
-        if let Some((depth, consumed, is_ordered)) = list_item_prefix(self.src) {
+        if let Some((depth, consumed, ordered_index)) = list_item_prefix(self.src) {
             self.idx = consumed;
             let compounds = self.parse_compounds(false);
-            return if is_ordered {
-                Line::new_ordered_list_item(depth, compounds)
+            return if let Some(index) = ordered_index {
+                Line::new_ordered_list_item(depth, index, compounds)
             } else {
                 Line::new_list_item(depth, compounds)
             };
@@ -304,9 +304,9 @@ fn compounds_are_rule(compounds: &[Compound<'_>]) -> bool {
 
 /// If the line starts with a list item marker (0-3 leading spaces followed by
 /// `* `, `- `, `+ `, or `<digits>. `/`<digits>) `), return the depth, the
-/// number of bytes consumed by the whole prefix, and whether it is an ordered
-/// marker.
-fn list_item_prefix(s: &str) -> Option<(u8, usize, bool)> {
+/// number of bytes consumed by the whole prefix, and, for ordered markers,
+/// the index read from the source.
+fn list_item_prefix(s: &str) -> Option<(u8, usize, Option<u32>)> {
     let bytes = s.as_bytes();
     let mut depth = 0;
     while depth < bytes.len() && bytes[depth] == b' ' {
@@ -319,7 +319,7 @@ fn list_item_prefix(s: &str) -> Option<(u8, usize, bool)> {
 
     // unordered
     if rest.starts_with("* ") || rest.starts_with("- ") || rest.starts_with("+ ") {
-        return Some((depth as u8, depth + 2, false));
+        return Some((depth as u8, depth + 2, None));
     }
 
     // ordered
@@ -331,11 +331,12 @@ fn list_item_prefix(s: &str) -> Option<(u8, usize, bool)> {
         return None;
     }
     if matches!(rest.as_bytes().get(i), Some(b'.') | Some(b')')) {
+        let index = rest[..i].parse().unwrap_or(1);
         if i + 1 == rest.len() {
-            return Some((depth as u8, depth + i + 1, true));
+            return Some((depth as u8, depth + i + 1, Some(index)));
         }
         if rest.as_bytes()[i + 1] == b' ' {
-            return Some((depth as u8, depth + i + 2, true));
+            return Some((depth as u8, depth + i + 2, Some(index)));
         }
     }
 
@@ -591,15 +592,15 @@ mod tests {
     fn ordered_items() {
         assert_eq!(
             Line::from("1. ordered item"),
-            Line::new_ordered_list_item(0, vec![Compound::raw_str("ordered item"),])
+            Line::new_ordered_list_item(0, 1, vec![Compound::raw_str("ordered item"),])
         );
         assert_eq!(
             Line::from("  2) ordered item"),
-            Line::new_ordered_list_item(2, vec![Compound::raw_str("ordered item"),])
+            Line::new_ordered_list_item(2, 2, vec![Compound::raw_str("ordered item"),])
         );
         assert_eq!(
             Line::from("42. ordered item"),
-            Line::new_ordered_list_item(0, vec![Compound::raw_str("ordered item"),])
+            Line::new_ordered_list_item(0, 42, vec![Compound::raw_str("ordered item"),])
         );
         assert_eq!(
             Line::from("1.5 not an item"),
