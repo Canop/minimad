@@ -6,7 +6,7 @@ use crate::*;
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CompositeStyle {
     Paragraph,
-    Header(u8), // never 0, and <= MAX_HEADER_DEPTH
+    Header(u8),   // never 0, and <= MAX_HEADER_DEPTH
     ListItem(u8), // can't be built > 3 by parsing: *, -, +
     OrderedListItem {
         // can't be built > 3 by parsing: 1., 1)

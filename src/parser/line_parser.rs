@@ -191,7 +191,10 @@ impl<'s> LineParser<'s> {
             {
                 self.idx += consumed;
                 if let Some(index) = ordered_index {
-                    CompositeStyle::OrderedListItem { level: depth, index }
+                    CompositeStyle::OrderedListItem {
+                        level: depth,
+                        index,
+                    }
                 } else {
                     CompositeStyle::ListItem(depth)
                 }

@@ -115,7 +115,11 @@ fn fix_ordered_indexes(lines: &mut Vec<Line<'_>>) {
 mod tests {
     use crate::*;
 
-    fn assert_ordered(line: &Line, level: u8, index: u32) {
+    fn assert_ordered(
+        line: &Line,
+        level: u8,
+        index: u32,
+    ) {
         match line {
             Line::Normal(Composite {
                 style: CompositeStyle::OrderedListItem { level: l, index: i },
